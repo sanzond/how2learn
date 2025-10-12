@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统一词汇学习系统</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { AlertCircle, CheckCircle, XCircle, Zap, TrendingUp, BookOpen } = lucideReact;
+
+        const UnifiedVocabularyLearning = () => {
+          const [vocabularyData, setVocabularyData] = useState(null);
+          const [currentSet, setCurrentSet] = useState('mentalStateSentences');
+          const [currentIndex, setCurrentIndex] = useState(0);
+          const [showAnswer, setShowAnswer] = useState(false);
+          const [userAnswer, setUserAnswer] = useState("");
+          const [feedback, setFeedback] = useState(null);
+          const [learningData, setLearningData] = useState([]);
+
+          // 加载JSON数据
+          useEffect(() => {
+            const loadVocabularyData = async () => {
+              try {
+                const response = await fetch('./vocabulary_data.json');
+                const data = await response.json();
+                setVocabularyData(data);
+                
+                // 初始化学习数据
+                const initialData = data[currentSet].map(v => ({ 
+                  ...v, 
+                  totalStrength: 0, 
+                  trials: 0 
+                }));
+                setLearningData(initialData);
+              } catch (error) {
+                console.error('加载词汇数据失败:', error);
+                // 如果加载失败，使用默认数据
+                setVocabularyData({
+                  mentalStateSentences: [],
+                  backPainVocabulary: []
+                });
+              }
+            };
+
+            loadVocabularyData();
+          }, []);
+
+          // 当切换词汇集时重新初始化
+          useEffect(() => {
+            if (vocabularyData && vocabularyData[currentSet]) {
+              const initialData = vocabularyData[currentSet].map(v => ({ 
+                ...v, 
+                totalStrength: 0, 
+                trials: 0 
+              }));
+              setLearningData(initialData);
+              setCurrentIndex(0);
+              setShowAnswer(false);
+              setUserAnswer("");
+              setFeedback(null);
+            }
+          }, [currentSet, vocabularyData]);
+
+          if (!vocabularyData || !learningData.length) {
+            return React.createElement('div', {
+              className: "max-w-4xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-cyan-50 min-h-screen"
+            }, React.createElement('div', {
+              className: "bg-white rounded-xl shadow-2xl p-8 text-center"
+            }, [
+              React.createElement('div', {
+                key: 'spinner',
+                className: "animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"
+              }),
+              React.createElement('p', {
+                key: 'text',
+                className: "text-gray-600"
+              }, "正在加载词汇数据...")
+            ]));
+          }
+
+          const currentWord = learningData[currentIndex];
+
+          const updateStrength = (isCorrect) => {
+            const alpha = 0.3;
+            const beta = 0.4;
+            const lambda = isCorrect ? currentWord.lambda : 0;
+            const V_all = currentWord.totalStrength;
+            
+            const predictionError = lambda - V_all;
+            const deltaV = alpha * beta * predictionError;
+            const newStrength = Math.max(0, Math.min(10, V_all + deltaV));
+
+            const newData = [...learningData];
+            newData[currentIndex] = {
+              ...currentWord,
+              totalStrength: newStrength,
+              trials: currentWord.trials + 1
+            };
+            setLearningData(newData);
+
+            return { predictionError, deltaV, newStrength };
+          };
+
+          const handleSubmit = () => {
+            const isCorrect = userAnswer.toLowerCase().trim() === currentWord.word.toLowerCase();
+            const { predictionError, deltaV, newStrength } = updateStrength(isCorrect);
+            
+            setFeedback({
+              isCorrect,
+              predictionError: predictionError.toFixed(2),
+              deltaV: deltaV.toFixed(2),
+              newStrength: newStrength.toFixed(2)
+            });
+            setShowAnswer(true);
+          };
+
+          const handleNext = () => {
+            setCurrentIndex((currentIndex + 1) % learningData.length);
+            setShowAnswer(false);
+            setUserAnswer("");
+            setFeedback(null);
+          };
+
+          const handlePrevious = () => {
+            setCurrentIndex((currentIndex - 1 + learningData.length) % learningData.length);
+            setShowAnswer(false);
+            setUserAnswer("");
+            setFeedback(null);
+          };
+
+          const handleKeyPress = (e) => {
+            if (e.key === 'Enter' && !showAnswer) {
+              handleSubmit();
+            }
+          };
+
+          const vocabularySets = {
+            mentalStateSentences: '心理状态词汇',
+            backPainVocabulary: '背痛相关词汇'
+          };
+
+          return React.createElement('div', {
+            className: "max-w-4xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-cyan-50 min-h-screen"
+          }, React.createElement('div', {
+            className: "bg-white rounded-xl shadow-2xl p-8"
+          }, [
+            // 标题和进度
+            React.createElement('div', {
+              key: 'header',
+              className: "flex items-center justify-between mb-6"
+            }, [
+              React.createElement('h1', {
+                key: 'title',
+                className: "text-3xl font-bold text-gray-800 flex items-center"
+              }, [
+                React.createElement(BookOpen, {
+                  key: 'icon',
+                  className: "mr-3 text-blue-600",
+                  size: 32
+                }),
+                "📚 R-W驱动词汇学习"
+              ]),
+              React.createElement('div', {
+                key: 'progress',
+                className: "text-sm text-gray-600"
+              }, `词汇 ${currentIndex + 1} / ${learningData.length}`)
+            ]),
+
+            // 词汇集选择器
+            React.createElement('div', {
+              key: 'selector',
+              className: "mb-6"
+            }, [
+              React.createElement('label', {
+                key: 'label',
+                className: "block text-sm font-medium text-gray-700 mb-2"
+              }, "选择词汇集："),
+              React.createElement('div', {
+                key: 'buttons',
+                className: "flex gap-2"
+              }, Object.entries(vocabularySets).map(([key, label]) =>
+                React.createElement('button', {
+                  key: key,
+                  onClick: () => setCurrentSet(key),
+                  className: `px-4 py-2 rounded-lg transition ${
+                    currentSet === key
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`
+                }, label)
+              ))
+            ]),
+
+            // 掌握度进度条
+            React.createElement('div', {
+              key: 'progress-bar',
+              className: "mb-8"
+            }, [
+              React.createElement('div', {
+                key: 'progress-header',
+                className: "flex items-center justify-between mb-2"
+              }, [
+                React.createElement('span', {
+                  key: 'label',
+                  className: "text-sm font-medium text-gray-700"
+                }, "掌握度进度"),
+                React.createElement('span', {
+                  key: 'value',
+                  className: "text-sm text-gray-600"
+                }, `${currentWord.totalStrength.toFixed(1)} / ${currentWord.lambda}`)
+              ]),
+              React.createElement('div', {
+                key: 'bar-container',
+                className: "w-full bg-gray-200 rounded-full h-3"
+              }, React.createElement('div', {
+                className: "bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full transition-all duration-500",
+                style: { width: `${(currentWord.totalStrength / currentWord.lambda) * 100}%` }
+              })),
+              React.createElement('div', {
+                key: 'trials',
+                className: "text-xs text-gray-500 mt-1"
+              }, `试验次数: ${currentWord.trials}`)
+            ]),
+
+            // 多重线索区域
+            React.createElement('div', {
+              key: 'cues',
+              className: "bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg mb-6"
+            }, [
+              React.createElement('div', {
+                key: 'cues-header',
+                className: "flex items-start mb-4"
+              }, [
+                React.createElement(Zap, {
+                  key: 'icon',
+                  className: "text-yellow-600 mr-2 mt-1",
+                  size: 20
+                }),
+                React.createElement('h3', {
+                  key: 'title',
+                  className: "font-bold text-lg text-gray-800"
+                }, "多重线索 (Multiple Cues)")
+              ]),
+              React.createElement('div', {
+                key: 'cues-list',
+                className: "space-y-3"
+              }, currentWord.cues.map((cue, idx) =>
+                React.createElement('div', {
+                  key: idx,
+                  className: "bg-white p-4 rounded-lg shadow-sm"
+                }, [
+                  React.createElement('div', {
+                    key: 'type',
+                    className: "flex items-center justify-between mb-2"
+                  }, React.createElement('span', {
+                    className: "text-xs font-semibold text-gray-500 uppercase"
+                  }, cue.type)),
+                  React.createElement('p', {
+                    key: 'text',
+                    className: "text-gray-700 text-lg"
+                  }, cue.text)
+                ])
+              ))
+            ]),
+
+            // 答题区域或结果显示
+            !showAnswer ? 
+              React.createElement('div', {
+                key: 'input-area',
+                className: "mb-6"
+              }, [
+                React.createElement('label', {
+                  key: 'label',
+                  className: "block text-sm font-medium text-gray-700 mb-2"
+                }, "根据上面的线索，这个词是："),
+                React.createElement('input', {
+                  key: 'input',
+                  type: "text",
+                  value: userAnswer,
+                  onChange: (e) => setUserAnswer(e.target.value),
+                  onKeyPress: handleKeyPress,
+                  className: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg",
+                  placeholder: "输入英文单词...",
+                  autoFocus: true
+                }),
+                React.createElement('button', {
+                  key: 'submit',
+                  onClick: handleSubmit,
+                  className: "mt-4 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+                }, "提交答案")
+              ])
+            :
+              React.createElement('div', {
+                key: 'result-area',
+                className: "mb-6"
+              }, [
+                React.createElement('div', {
+                  key: 'feedback',
+                  className: `p-6 rounded-lg mb-4 ${
+                    feedback.isCorrect 
+                      ? 'bg-green-50 border-2 border-green-500' 
+                      : 'bg-red-50 border-2 border-red-500'
+                  }`
+                }, [
+                  React.createElement('div', {
+                    key: 'feedback-header',
+                    className: "flex items-center mb-4"
+                  }, [
+                    feedback.isCorrect ? 
+                      React.createElement(CheckCircle, {
+                        key: 'icon',
+                        className: "text-green-600 mr-2",
+                        size: 24
+                      }) :
+                      React.createElement(XCircle, {
+                        key: 'icon',
+                        className: "text-red-600 mr-2",
+                        size: 24
+                      }),
+                    React.createElement('h3', {
+                      key: 'title',
+                      className: "text-xl font-bold"
+                    }, feedback.isCorrect ? '正确！✓' : '需要继续学习')
+                  ]),
+
+                  // R-W学习分析
+                  React.createElement('div', {
+                    key: 'analysis',
+                    className: "bg-white p-4 rounded-lg mb-4"
+                  }, [
+                    React.createElement('h4', {
+                      key: 'title',
+                      className: "font-bold text-sm text-gray-700 mb-3"
+                    }, "🧠 R-W学习分析"),
+                    React.createElement('div', {
+                      key: 'metrics',
+                      className: "grid grid-cols-3 gap-3 text-sm"
+                    }, [
+                      React.createElement('div', {
+                        key: 'error',
+                        className: "bg-blue-50 p-3 rounded"
+                      }, [
+                        React.createElement('div', {
+                          key: 'label',
+                          className: "text-gray-600 text-xs"
+                        }, "预测误差"),
+                        React.createElement('div', {
+                          key: 'value',
+                          className: "font-bold text-blue-600"
+                        }, feedback.predictionError)
+                      ]),
+                      React.createElement('div', {
+                        key: 'delta',
+                        className: "bg-purple-50 p-3 rounded"
+                      }, [
+                        React.createElement('div', {
+                          key: 'label',
+                          className: "text-gray-600 text-xs"
+                        }, "学习增量 ΔV"),
+                        React.createElement('div', {
+                          key: 'value',
+                          className: "font-bold text-purple-600"
+                        }, feedback.deltaV)
+                      ]),
+                      React.createElement('div', {
+                        key: 'strength',
+                        className: "bg-green-50 p-3 rounded"
+                      }, [
+                        React.createElement('div', {
+                          key: 'label',
+                          className: "text-gray-600 text-xs"
+                        }, "新强度"),
+                        React.createElement('div', {
+                          key: 'value',
+                          className: "font-bold text-green-600"
+                        }, feedback.newStrength)
+                      ])
+                    ])
+                  ]),
+
+                  // 词汇详情
+                  React.createElement('div', {
+                    key: 'details',
+                    className: "bg-white p-4 rounded-lg mb-4"
+                  }, [
+                    React.createElement('div', {
+                      key: 'word',
+                      className: "mb-3"
+                    }, [
+                      React.createElement('span', {
+                        key: 'label',
+                        className: "text-gray-600"
+                      }, "单词："),
+                      React.createElement('span', {
+                        key: 'value',
+                        className: "font-bold text-2xl ml-2"
+                      }, currentWord.word)
+                    ]),
+                    React.createElement('div', {
+                      key: 'translation',
+                      className: "mb-3"
+                    }, [
+                      React.createElement('span', {
+                        key: 'label',
+                        className: "text-gray-600"
+                      }, "释义："),
+                      React.createElement('span', {
+                        key: 'value',
+                        className: "ml-2"
+                      }, currentWord.translation)
+                    ]),
+                    React.createElement('div', {
+                      key: 'example',
+                      className: "mb-3"
+                    }, [
+                      React.createElement('span', {
+                        key: 'label',
+                        className: "text-gray-600"
+                      }, "例句："),
+                      React.createElement('span', {
+                        key: 'value',
+                        className: "ml-2 italic"
+                      }, currentWord.example)
+                    ]),
+                    React.createElement('div', {
+                      key: 'mistake',
+                      className: "bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400"
+                    }, [
+                      React.createElement('span', {
+                        key: 'label',
+                        className: "text-gray-600 font-semibold"
+                      }, "⚠️ 常见错误："),
+                      React.createElement('span', {
+                        key: 'value',
+                        className: "ml-2 text-sm"
+                      }, currentWord.commonMistake)
+                    ])
+                  ])
+                ]),
+
+                // 导航按钮
+                React.createElement('div', {
+                  key: 'navigation',
+                  className: "flex gap-3"
+                }, [
+                  React.createElement('button', {
+                    key: 'prev',
+                    onClick: handlePrevious,
+                    className: "flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 transition"
+                  }, "← 上一个"),
+                  React.createElement('button', {
+                    key: 'next',
+                    onClick: handleNext,
+                    className: "flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+                  }, "下一个 →")
+                ])
+              ]),
+
+            // 学习原理说明
+            React.createElement('div', {
+              key: 'theory',
+              className: "mt-8 p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500"
+            }, [
+              React.createElement('h4', {
+                key: 'title',
+                className: "font-bold mb-2 text-indigo-900"
+              }, "💡 学习原理（Rescorla-Wagner）"),
+              React.createElement('ul', {
+                key: 'list',
+                className: "text-sm text-gray-700 space-y-1"
+              }, [
+                React.createElement('li', { key: '1' }, [
+                  React.createElement('strong', { key: 'label' }, "多线索设计："),
+                  "提供上下文、同义词、图像等多个提示，建立丰富的联结网络"
+                ]),
+                React.createElement('li', { key: '2' }, [
+                  React.createElement('strong', { key: 'label' }, "预测误差："),
+                  "答案正确性决定学习强度的增减（λ - V_all）"
+                ]),
+                React.createElement('li', { key: '3' }, [
+                  React.createElement('strong', { key: 'label' }, "渐进掌握："),
+                  "随着掌握度提升，每次学习增量自然减少"
+                ]),
+                React.createElement('li', { key: '4' }, [
+                  React.createElement('strong', { key: 'label' }, "公式："),
+                  "ΔV = 0.3 × 0.4 × (目标强度 - 当前强度)"
+                ])
+              ])
+            ]),
+
+            // 词汇掌握情况总览
+            React.createElement('div', {
+              key: 'overview',
+              className: "mt-6"
+            }, [
+              React.createElement('h4', {
+                key: 'title',
+                className: "font-bold mb-3"
+              }, "所有词汇掌握情况"),
+              React.createElement('div', {
+                key: 'grid',
+                className: "grid grid-cols-6 gap-2"
+              }, learningData.map((word, idx) =>
+                React.createElement('div', {
+                  key: idx,
+                  onClick: () => {
+                    setCurrentIndex(idx);
+                    setShowAnswer(false);
+                    setUserAnswer("");
+                    setFeedback(null);
+                  },
+                  className: `p-2 rounded cursor-pointer transition ${
+                    idx === currentIndex 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-gray-100 hover:bg-gray-200'
+                  }`
+                }, [
+                  React.createElement('div', {
+                    key: 'word',
+                    className: "text-xs font-medium truncate"
+                  }, word.word),
+                  React.createElement('div', {
+                    key: 'percentage',
+                    className: "text-xs mt-1"
+                  }, `${(word.totalStrength / word.lambda * 100).toFixed(0)}%`)
+                ])
+              ))
+            ])
+          ]));
+        };
+
+        ReactDOM.render(React.createElement(UnifiedVocabularyLearning), document.getElementById('root'));
+    </script>
+</body>
+</html>

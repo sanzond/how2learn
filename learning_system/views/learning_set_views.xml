@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Learning Set Tree View -->
+    <record id="view_learning_set_tree" model="ir.ui.view">
+        <field name="name">learning.set.tree</field>
+        <field name="model">learning.set</field>
+        <field name="arch" type="xml">
+            <tree string="Learning Sets">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="description"/>
+                <field name="vocabulary_count"/>
+                <field name="sentence_count"/>
+                <field name="user"/>
+                <field name="audio_filename" string="Audio"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Learning Set Form View -->
+    <record id="view_learning_set_form" model="ir.ui.view">
+        <field name="name">learning.set.form</field>
+        <field name="model">learning.set</field>
+        <field name="arch" type="xml">
+            <form string="Learning Set">
+                <header>
+                    <button name="export_to_json" string="Export to JSON" type="object" class="btn-primary"/>
+                    <button name="action_import_json_wizard" string="Import JSON Data" type="object" 
+                            class="btn-secondary" icon="fa-upload"/>
+                    <button name="action_ai_generate_data" string="AI 生成数据" type="object" 
+                            class="btn-success" icon="fa-magic"/>
+                    <button name="action_open_txt2audio" string="打开txt2audio" type="object" 
+                            class="btn-info" icon="fa-external-link"/>
+                    <button name="action_generate_txt2audio" string="生成txt2audio" type="object" 
+                            class="btn-warning" icon="fa-volume-up"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_view_vocabulary" icon="fa-book">
+                            <field string="Vocabulary" name="vocabulary_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button" type="object" name="action_view_sentences" icon="fa-list">
+                            <field string="Sentences" name="sentence_count" widget="statinfo"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                            attrs="{'invisible': [('active', '=', True)]}"/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="description"/>
+                            <field name="user"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="active"/>
+                            <label for="audio_file" string="音频文件" attrs="{'invisible': [('audio_file', '=', False)]}"/>
+                            <div attrs="{'invisible': [('audio_file', '=', False)]}">
+                                <field name="audio_file" filename="audio_filename" widget="audio" nolabel="1"/>
+                                <div class="text-muted small mt-1">
+                                    <i class="fa fa-file-audio-o"/> 
+                                    <field name="audio_filename" nolabel="1" readonly="1" class="oe_inline"/>
+                                </div>
+                            </div>
+                            <field name="audio_filename" invisible="1"/>
+                            <field name="audio_url" readonly="1" attrs="{'invisible': [('audio_url', '=', False)]}" widget="audio"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="full_text"/>
+                    </group>
+                    <notebook>
+                        <page string="Vocabulary" name="vocabulary">
+                            <field name="vocabulary_ids">
+                                <tree>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="word"/>
+                                    <field name="translation"/>
+                                    <field name="lambda_value"/>
+                                    <field name="cue_count"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Sentences" name="sentences">
+                            <field name="sentence_ids">
+                                <tree>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="sentence_id"/>
+                                    <field name="title"/>
+                                    <field name="sentence"/>
+                                    <field name="lambda_value"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Learning Set Action -->
+    <record id="action_learning_set" model="ir.actions.act_window">
+        <field name="name">Learning Sets</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">learning.set</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first learning set!
+            </p>
+            <p>
+                Learning sets contain vocabulary and sentences for adaptive learning.
+            </p>
+        </field>
+    </record>
+</odoo>

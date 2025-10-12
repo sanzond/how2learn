@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Learning Sets -->
+        <record id="learning_set_mental_state" model="learning.set">
+            <field name="name">mentalStateSentences</field>
+            <field name="description">心理状态内容</field>
+            <field name="full_text">Lately, my back has been constantly aching. I need to start a push-up routine to build up my shoulder and back muscles.</field>
+            <field name="user">public</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="learning_set_back_pain" model="learning.set">
+            <field name="name">backPainSentences</field>
+            <field name="description">背痛相关内容</field>
+            <field name="full_text">My mental state is quite poor today. It feels like I'm sick and I'm constantly drowsy. Maybe I've caught some kind of virus. Perhaps fasting could help alleviate it.</field>
+            <field name="user">public</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- Vocabulary for Mental State Learning Set -->
+        <record id="vocab_lately" model="learning.vocabulary">
+            <field name="learning_set_id" ref="learning_set_mental_state"/>
+            <field name="word">lately</field>
+            <field name="translation">最近、近来</field>
+            <field name="example">Lately, I've been feeling tired.</field>
+            <field name="common_mistake">不要与'later'（稍后）混淆</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="vocab_aching" model="learning.vocabulary">
+            <field name="learning_set_id" ref="learning_set_mental_state"/>
+            <field name="word">aching</field>
+            <field name="translation">疼痛的、酸痛的</field>
+            <field name="example">My legs are aching after the long run.</field>
+            <field name="common_mistake">ache强调持续的钝痛，不同于sharp pain（刺痛）</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="vocab_routine" model="learning.vocabulary">
+            <field name="learning_set_id" ref="learning_set_mental_state"/>
+            <field name="word">routine</field>
+            <field name="translation">常规、例行程序</field>
+            <field name="example">She follows a strict morning routine.</field>
+            <field name="common_mistake">routine可以是名词（例行公事）或形容词（常规的）</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <record id="vocab_muscles" model="learning.vocabulary">
+            <field name="learning_set_id" ref="learning_set_mental_state"/>
+            <field name="word">muscles</field>
+            <field name="translation">肌肉</field>
+            <field name="example">Exercise helps develop your muscles.</field>
+            <field name="common_mistake">muscle（单数）vs muscles（复数），注意发音 /'mʌsl/</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">40</field>
+        </record>
+
+        <!-- Vocabulary for Back Pain Learning Set -->
+        <record id="vocab_mental_state" model="learning.vocabulary">
+            <field name="learning_set_id" ref="learning_set_back_pain"/>
+            <field name="word">mental state</field>
+            <field name="translation">心理/精神状态</field>
+            <field name="example">Her mental state improved after therapy.</field>
+            <field name="common_mistake">不要与'mental'（仅指智力）混淆，这里指整体心理状况</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="vocab_drowsy" model="learning.vocabulary">
+            <field name="learning_set_id" ref="learning_set_back_pain"/>
+            <field name="word">drowsy</field>
+            <field name="translation">困倦的、昏昏欲睡的</field>
+            <field name="example">The medication made him feel drowsy.</field>
+            <field name="common_mistake">drowsy强调困倦感，不同于tired（疲劳）或sleepy（想睡）</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="vocab_virus" model="learning.vocabulary">
+            <field name="learning_set_id" ref="learning_set_back_pain"/>
+            <field name="word">virus</field>
+            <field name="translation">病毒</field>
+            <field name="example">The flu is caused by a virus.</field>
+            <field name="common_mistake">virus（病毒）vs bacteria（细菌），两者是不同类型的病原体</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <record id="vocab_alleviate" model="learning.vocabulary">
+            <field name="learning_set_id" ref="learning_set_back_pain"/>
+            <field name="word">alleviate</field>
+            <field name="translation">减轻、缓解</field>
+            <field name="example">Medicine can alleviate pain.</field>
+            <field name="common_mistake">alleviate强调减轻程度，不是完全消除（eliminate）</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">40</field>
+        </record>
+
+        <!-- Cues for 'lately' -->
+        <record id="cue_lately_context" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_lately"/>
+            <field name="cue_type_char">context</field>
+            <field name="text">___, my back has been aching</field>
+            <field name="strength">0</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="cue_lately_synonym" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_lately"/>
+            <field name="cue_type_char">synonym</field>
+            <field name="text">recently / 最近</field>
+            <field name="strength">0</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="cue_lately_time" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_lately"/>
+            <field name="cue_type_char">time</field>
+            <field name="text">⏰ 指最近一段时间</field>
+            <field name="strength">0</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- Cues for 'aching' -->
+        <record id="cue_aching_context" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_aching"/>
+            <field name="cue_type_char">context</field>
+            <field name="text">my back has been constantly ___</field>
+            <field name="strength">0</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="cue_aching_feeling" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_aching"/>
+            <field name="cue_type_char">feeling</field>
+            <field name="text">持续的、钝痛的感觉</field>
+            <field name="strength">0</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="cue_aching_image" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_aching"/>
+            <field name="cue_type_char">image</field>
+            <field name="text">😣💢 dull, persistent pain</field>
+            <field name="strength">0</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- Cues for 'routine' -->
+        <record id="cue_routine_context" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_routine"/>
+            <field name="cue_type_char">context</field>
+            <field name="text">start a push-up ___</field>
+            <field name="strength">0</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="cue_routine_pattern" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_routine"/>
+            <field name="cue_type_char">pattern</field>
+            <field name="text">规律的、重复的活动安排</field>
+            <field name="strength">0</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="cue_routine_synonym" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_routine"/>
+            <field name="cue_type_char">synonym</field>
+            <field name="text">habit, schedule, regimen</field>
+            <field name="strength">0</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- Cues for 'muscles' -->
+        <record id="cue_muscles_context" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_muscles"/>
+            <field name="cue_type_char">context</field>
+            <field name="text">shoulder and back ___</field>
+            <field name="strength">0</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="cue_muscles_anatomy" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_muscles"/>
+            <field name="cue_type_char">anatomy</field>
+            <field name="text">身体组织，负责运动</field>
+            <field name="strength">0</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="cue_muscles_image" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_muscles"/>
+            <field name="cue_type_char">image</field>
+            <field name="text">💪 muscle tissue</field>
+            <field name="strength">0</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- Cues for 'mental state' -->
+        <record id="cue_mental_state_context" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_mental_state"/>
+            <field name="cue_type_char">context</field>
+            <field name="text">My ___ is quite poor today</field>
+            <field name="strength">0</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="cue_mental_state_synonym" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_mental_state"/>
+            <field name="cue_type_char">synonym</field>
+            <field name="text">psychological condition / 心理状态</field>
+            <field name="strength">0</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="cue_mental_state_image" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_mental_state"/>
+            <field name="cue_type_char">image</field>
+            <field name="text">🧠💭</field>
+            <field name="strength">0</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- Cues for 'drowsy' -->
+        <record id="cue_drowsy_context" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_drowsy"/>
+            <field name="cue_type_char">context</field>
+            <field name="text">I'm constantly ___</field>
+            <field name="strength">0</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="cue_drowsy_symptom" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_drowsy"/>
+            <field name="cue_type_char">symptom</field>
+            <field name="text">想睡觉、困倦的感觉</field>
+            <field name="strength">0</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="cue_drowsy_image" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_drowsy"/>
+            <field name="cue_type_char">image</field>
+            <field name="text">😴💤</field>
+            <field name="strength">0</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- Cues for 'virus' -->
+        <record id="cue_virus_context" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_virus"/>
+            <field name="cue_type_char">context</field>
+            <field name="text">caught some kind of ___</field>
+            <field name="strength">0</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="cue_virus_category" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_virus"/>
+            <field name="cue_type_char">category</field>
+            <field name="text">病原体：bacteria/virus/fungus</field>
+            <field name="strength">0</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="cue_virus_image" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_virus"/>
+            <field name="cue_type_char">image</field>
+            <field name="text">🦠</field>
+            <field name="strength">0</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- Cues for 'alleviate' -->
+        <record id="cue_alleviate_context" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_alleviate"/>
+            <field name="cue_type_char">context</field>
+            <field name="text">help ___ it</field>
+            <field name="strength">0</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="cue_alleviate_synonym" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_alleviate"/>
+            <field name="cue_type_char">synonym</field>
+            <field name="text">reduce, ease, relieve</field>
+            <field name="strength">0</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="cue_alleviate_opposite" model="learning.cue">
+            <field name="vocabulary_id" ref="vocab_alleviate"/>
+            <field name="cue_type_char">opposite</field>
+            <field name="text">反义：worsen, aggravate</field>
+            <field name="strength">0</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- Sentences for Mental State Learning Set -->
+        <record id="sentence_mental_1" model="learning.sentence">
+            <field name="learning_set_id" ref="learning_set_mental_state"/>
+            <field name="sentence_id">1</field>
+            <field name="title">句子1：时间状语</field>
+            <field name="sentence">Lately, my back has been constantly aching.</field>
+            <field name="prediction_question">看到'Lately'开头，说话人最可能要描述什么？</field>
+            <field name="wrong_options">过去很久的事情（误解时间范围）
+将来的计划（误解时态）
+别人的情况（误解主语）</field>
+            <field name="correct_answer">最近发生的持续状况</field>
+            <field name="explanation">Lately = 最近，has been aching = 现在完成进行时，表示从过去某时开始持续到现在的状态。</field>
+            <field name="grammar_pattern">时间副词 + 现在完成进行时</field>
+            <field name="grammar_breakdown">{"Lately": "时间副词（最近）", "my back": "主语", "has been": "现在完成时助动词", "constantly": "频率副词（持续地）", "aching": "现在分词（疼痛）"}</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="sentence_mental_2" model="learning.sentence">
+            <field name="learning_set_id" ref="learning_set_mental_state"/>
+            <field name="sentence_id">2</field>
+            <field name="title">句子2：解决方案</field>
+            <field name="sentence">I need to start a push-up routine to build up my shoulder and back muscles.</field>
+            <field name="prediction_question">说话人选择'push-up routine'的主要目的是？</field>
+            <field name="wrong_options">减肥瘦身（误解目标）
+娱乐休闲（误解性质）
+展示力量（误解动机）</field>
+            <field name="correct_answer">针对性地增强肩背肌肉</field>
+            <field name="explanation">to build up my shoulder and back muscles明确说明目的是增强特定部位的肌肉，这是针对背痛问题的解决方案。</field>
+            <field name="grammar_pattern">主语 + need to + 动词 + 宾语 + 目的状语</field>
+            <field name="grammar_breakdown">{"I need to": "需要做某事", "start": "开始", "a push-up routine": "俯卧撑训练计划", "to build up": "目的：为了增强", "my shoulder and back muscles": "特定部位的肌肉"}</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- Sentences for Back Pain Learning Set -->
+        <record id="sentence_back_pain_1" model="learning.sentence">
+            <field name="learning_set_id" ref="learning_set_back_pain"/>
+            <field name="sentence_id">1</field>
+            <field name="title">句子1：描述状态</field>
+            <field name="sentence">My mental state is quite poor today.</field>
+            <field name="prediction_question">根据'mental state is poor'，你认为接下来可能说什么？</field>
+            <field name="wrong_options">我的钱包丢了（误解mental为金钱相关）
+我的房间很脏（误解state为物理状态）
+我很穷（误解poor为经济状况）</field>
+            <field name="correct_answer">描述具体的心理/身体症状</field>
+            <field name="explanation">mental state = 心理状态，poor = 糟糕的。这是在描述精神/心理方面的不适。</field>
+            <field name="grammar_pattern">主语 + be动词 + 程度副词 + 形容词 + 时间</field>
+            <field name="grammar_breakdown">{"My mental state": "主语（我的精神状态）", "is": "系动词", "quite": "程度副词（相当、很）", "poor": "形容词（差的、糟糕的）", "today": "时间状语"}</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="sentence_back_pain_2" model="learning.sentence">
+            <field name="learning_set_id" ref="learning_set_back_pain"/>
+            <field name="sentence_id">2</field>
+            <field name="title">句子2：具体症状</field>
+            <field name="sentence">It feels like I'm sick and I'm constantly drowsy.</field>
+            <field name="prediction_question">看到'constantly drowsy'，判断说话人最可能需要什么？</field>
+            <field name="wrong_options">喝更多咖啡保持清醒（对抗症状）
+继续工作硬撑（忽视问题）
+吃更多东西补充能量（误解原因）</field>
+            <field name="correct_answer">休息或就医</field>
+            <field name="explanation">constantly drowsy（持续困倦）配合feels like I'm sick，说明这是病理性疲劳，需要休息或医疗干预，而非简单的提神。</field>
+            <field name="grammar_pattern">It feels like + 从句 + and + 并列从句</field>
+            <field name="grammar_breakdown">{"It feels like": "感觉像是...", "I'm sick": "我生病了", "and": "并列连词", "I'm constantly drowsy": "我持续困倦", "constantly": "频率副词（持续地、不断地）"}</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="sentence_back_pain_3" model="learning.sentence">
+            <field name="learning_set_id" ref="learning_set_back_pain"/>
+            <field name="sentence_id">3</field>
+            <field name="title">句子3：病因推测</field>
+            <field name="sentence">Maybe I've caught some kind of virus.</field>
+            <field name="prediction_question">为什么说话人推测是'virus'而不是'bacteria'？</field>
+            <field name="wrong_options">病毒更常见（过度泛化）
+病毒听起来更严重（情绪偏差）
+说话人是医生所以知道（假设专业）</field>
+            <field name="correct_answer">这只是不确定的猜测（Maybe表明）</field>
+            <field name="explanation">Maybe（也许）和some kind of（某种）都表明这是不确定的推测，说话人并不真正知道病因。virus只是可能性之一。</field>
+            <field name="grammar_pattern">Maybe + 现在完成时（推测过去发生的事）</field>
+            <field name="grammar_breakdown">{"Maybe": "或许、可能（表不确定）", "I've caught": "我已经感染了（现在完成时）", "some kind of": "某种（不确定的类型）", "virus": "病毒"}</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <record id="sentence_back_pain_4" model="learning.sentence">
+            <field name="learning_set_id" ref="learning_set_back_pain"/>
+            <field name="sentence_id">4</field>
+            <field name="title">句子4：解决方案</field>
+            <field name="sentence">Perhaps fasting could help alleviate it.</field>
+            <field name="prediction_question">说话人对'fasting'（禁食）的态度是？</field>
+            <field name="wrong_options">非常确信有效（过度自信）
+医生建议的标准治疗（误认权威）
+唯一的解决方案（排他性错误）</field>
+            <field name="correct_answer">不太确定的尝试性想法</field>
+            <field name="explanation">Perhaps（也许）+ could（可能）+ help（帮助），三重不确定性表达。这是一个tentative suggestion（试探性建议），不是confident recommendation。</field>
+            <field name="grammar_pattern">Perhaps + 情态动词 + 动词 + 宾语</field>
+            <field name="grammar_breakdown">{"Perhaps": "或许（比maybe更正式的不确定）", "fasting": "禁食（动名词作主语）", "could help": "可能有助于（情态动词表可能性）", "alleviate": "减轻、缓解", "it": "指代前面的症状"}</field>
+            <field name="lambda_value">10</field>
+            <field name="sequence">40</field>
+        </record>
+    </data>
+</odoo>

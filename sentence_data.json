@@ -1,0 +1,240 @@
+{
+  "mentalStateSentences": [
+    {
+      "id": 1,
+      "title": "句子1：状态描述",
+      "sentence": "My mental state is quite poor today.",
+      "prediction": {
+        "question": "当某人说'mental state is quite poor'时，他们最可能接下来会？",
+        "wrongOptions": [
+          "立即去看心理医生（过度医疗化）",
+          "告诉所有人自己的问题（过度分享）",
+          "什么都不做，等它自己好转（消极等待）"
+        ],
+        "correctAnswer": "分析原因并寻找改善方法",
+        "explanation": "'quite poor'暗示说话人有自我觉察能力，会理性分析。直接就医过于极端，过度分享不现实，完全不管不符合表达动机。最可能的是先自我分析，寻找可控因素。"
+      },
+      "grammar": {
+        "pattern": "主语 + 系动词 + 表语 + 时间状语",
+        "breakdown": {
+          "My mental state": "主语（我的精神状态）",
+          "is": "系动词be的现在时",
+          "quite poor": "表语（相当糟糕）",
+          "today": "时间状语（今天）",
+          "quite": "程度副词，修饰形容词poor，表示'相当、颇为'"
+        },
+        "keyPoint": "系表结构描述状态。'quite'作程度副词，比'very'语气稍弱，更客观。"
+      },
+      "semanticAnalysis": {
+        "title": "语义层次分析",
+        "layers": [
+          {
+            "level": "词汇选择",
+            "content": "'mental state'而非'mood'，显示说话人的心理学素养"
+          },
+          {
+            "level": "程度表达",
+            "content": "'quite poor'适中表达，既承认问题又不过分夸大"
+          },
+          {
+            "level": "时间限定",
+            "content": "'today'暗示这是临时状态，不是长期问题"
+          }
+        ]
+      },
+      "lambda": 10
+    },
+    {
+      "id": 2,
+      "title": "句子2：症状表现",
+      "sentence": "I'm constantly drowsy and I think I caught some kind of virus.",
+      "prediction": {
+        "question": "说话人将'drowsy'归因于'virus'，这种推理合理吗？",
+        "wrongOptions": [
+          "完全正确，病毒就是会让人困倦（简单因果）",
+          "完全错误，困倦与病毒无关（否定关联）",
+          "需要立即验血确诊病毒类型（过度医疗）"
+        ],
+        "correctAnswer": "合理但不完整，还有其他可能原因",
+        "explanation": "病毒感染确实可能导致疲劳困倦，但'constantly drowsy'也可能由睡眠不足、压力、营养不良等引起。说话人的推理有一定道理，但可能存在归因偏误，忽略了其他因素。"
+      },
+      "grammar": {
+        "pattern": "主语 + 系动词 + 表语 + and + 主语 + 谓语 + 宾语从句",
+        "breakdown": {
+          "I'm constantly drowsy": "第一个分句（系表结构）",
+          "constantly": "频率副词，修饰形容词drowsy",
+          "and": "并列连词，连接两个分句",
+          "I think": "主句（表达观点）",
+          "I caught some kind of virus": "宾语从句（具体想法内容）"
+        },
+        "keyPoint": "并列句表达症状+推测。'I think'降低断言强度，显示不确定性。"
+      },
+      "semanticAnalysis": {
+        "title": "因果推理分析",
+        "layers": [
+          {
+            "level": "症状描述",
+            "content": "'constantly drowsy' - 持续性疲劳，强调问题严重性"
+          },
+          {
+            "level": "原因假设",
+            "content": "'caught some kind of virus' - 归因于外部因素（病毒）"
+          },
+          {
+            "level": "认知模式",
+            "content": "显示医学化思维：身体不适 → 寻找病理原因"
+          }
+        ]
+      },
+      "lambda": 10
+    },
+    {
+      "id": 3,
+      "title": "句子3：解决方案",
+      "sentence": "I think fasting could help alleviate it.",
+      "prediction": {
+        "question": "为什么说话人认为'fasting'（禁食）能改善病毒感染？",
+        "wrongOptions": [
+          "禁食能直接杀死病毒（医学误解）",
+          "这是医生的专业建议（假设权威）",
+          "禁食是传统偏方，一定有效（迷信思维）"
+        ],
+        "correctAnswer": "可能相信禁食有助于身体自愈",
+        "explanation": "说话人可能受到'给身体休息时间自我修复'理念影响。虽然短期轻断食可能有某些益处，但对病毒感染的效果缺乏强有力科学证据。这反映了对替代健康方法的兴趣。"
+      },
+      "grammar": {
+        "pattern": "主语 + 谓语 + 宾语从句（情态动词 + 动词 + 宾语）",
+        "breakdown": {
+          "I think": "主句（表达观点）",
+          "fasting": "宾语从句的主语（禁食）",
+          "could help": "情态动词could + 动词help（可能有助于）",
+          "alleviate": "动词（减轻、缓解）",
+          "it": "代词，指代前面提到的问题"
+        },
+        "keyPoint": "'could'表示可能性，比'will'更谨慎。'I think'进一步降低确定性。"
+      },
+      "semanticAnalysis": {
+        "title": "解决方案逻辑",
+        "layers": [
+          {
+            "level": "方法选择",
+            "content": "选择'fasting'而非药物，显示偏好自然疗法"
+          },
+          {
+            "level": "不确定性",
+            "content": "'I think' + 'could' 双重不确定，表明这是尝试性想法"
+          },
+          {
+            "level": "整体逻辑",
+            "content": "从症状→病因假设→自然解决方案的完整思路"
+          }
+        ]
+      },
+      "lambda": 10
+    }
+  ],
+  "backPainSentences": [
+    {
+      "id": 1,
+      "title": "句子1：问题描述",
+      "sentence": "Lately, my back has been constantly aching.",
+      "prediction": {
+        "question": "看到'constantly aching'，说话人接下来最可能做什么？",
+        "wrongOptions": [
+          "忽略它，继续正常生活（否认问题严重性）",
+          "立即去医院急诊（过度反应）",
+          "吃止痛药就行了（治标不治本的误解）"
+        ],
+        "correctAnswer": "寻找根本原因并制定改善计划",
+        "explanation": "'constantly'表示持续性问题，需要从根源解决。单纯依赖药物或忽视都不是长期解决方案。说话人需要分析原因（如姿势、缺乏锻炼）并采取系统性行动。"
+      },
+      "grammar": {
+        "pattern": "时间副词 + 主语 + 现在完成进行时 + 频率副词 + 现在分词",
+        "breakdown": {
+          "Lately": "时间副词（最近）",
+          "my back": "主语",
+          "has been aching": "现在完成进行时（强调从过去到现在的持续状态）",
+          "constantly": "频率副词（不断地、持续地）",
+          "现在完成进行时": "has/have been + V-ing，强调动作的持续性和临时性"
+        },
+        "keyPoint": "现在完成进行时表示：动作从过去开始，持续到现在，可能继续。强调过程的持续性。"
+      },
+      "semanticAnalysis": {
+        "title": "语义层次分析",
+        "layers": [
+          {
+            "level": "时间维度",
+            "content": "'Lately' 设定时间范围 → 这不是突然发生的急性问题"
+          },
+          {
+            "level": "持续性",
+            "content": "'has been...ing' + 'constantly' → 双重强调持续性，表明问题严重"
+          },
+          {
+            "level": "隐含意图",
+            "content": "说话人在铺垫：我需要采取行动了（为下一句做准备）"
+          }
+        ]
+      },
+      "lambda": 10
+    },
+    {
+      "id": 2,
+      "title": "句子2：解决方案",
+      "sentence": "I need to start a push-up routine to build up my shoulder and back muscles.",
+      "prediction": {
+        "question": "为什么说话人选择'push-up'（俯卧撑）而不是去看医生或按摩？",
+        "wrongOptions": [
+          "俯卧撑能立即止痛（误解锻炼效果）",
+          "这是医生的专业建议（假设权威指导）",
+          "不想花钱看医生（过度解读动机）"
+        ],
+        "correctAnswer": "说话人认为问题源于肌肉力量不足",
+        "explanation": "关键词'build up muscles'表明说话人的因果推理：背痛 → 肌肉弱 → 需要增强。这是一个self-diagnosis（自我诊断），未必医学正确，但反映了说话人的问题归因逻辑。"
+      },
+      "grammar": {
+        "pattern": "主语 + need to + 动词 + 宾语 + 不定式表目的",
+        "breakdown": {
+          "I need to": "表示必要性（有义务或需求做某事）",
+          "start": "开始（后接名词或动名词）",
+          "a push-up routine": "俯卧撑训练计划",
+          "to build up": "不定式表目的（为了...）",
+          "my shoulder and back muscles": "复合宾语（肩部和背部肌肉）"
+        },
+        "keyPoint": "不定式'to build up'表目的，回答'为什么要start a routine'的问题。"
+      },
+      "semanticAnalysis": {
+        "title": "因果逻辑链分析",
+        "layers": [
+          {
+            "level": "问题识别",
+            "content": "背痛（句子1）"
+          },
+          {
+            "level": "原因假设",
+            "content": "肌肉不够强壮 → 无法支撑身体"
+          },
+          {
+            "level": "解决方案",
+            "content": "俯卧撑 → 增强肌肉 → 改善背痛"
+          },
+          {
+            "level": "行动计划",
+            "content": "'routine'表示长期、规律的训练，而非一次性行为"
+          }
+        ]
+      },
+      "criticalThinking": {
+        "question": "🤔 批判性思考：这个解决方案合理吗？",
+        "points": [
+          "✓ 积极：主动采取行动，而非被动等待",
+          "✓ 合理：肌肉力量确实能改善某些类型的背痛",
+          "⚠️ 风险：未经医生诊断，可能误判病因",
+          "⚠️ 局限：如果是椎间盘问题，俯卧撑可能加重症状",
+          "💡 建议：最好先咨询专业人士，再开始训练计划"
+        ]
+      },
+      "lambda": 10
+    }
+  ]
+}

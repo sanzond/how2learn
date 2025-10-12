@@ -1,0 +1,267 @@
+{
+  "mentalStateSentences": {
+    "fullText": "Lately, my back has been constantly aching. I need to start a push-up routine to build up my shoulder and back muscles.",
+    "vocabulary": [
+      {
+        "word": "lately",
+        "cues": [
+          { "type": "context", "text": "___, my back has been aching", "strength": 0 },
+          { "type": "synonym", "text": "recently / 最近", "strength": 0 },
+          { "type": "time", "text": "⏰ 指最近一段时间", "strength": 0 }
+        ],
+        "translation": "最近、近来",
+        "example": "Lately, I've been feeling tired.",
+        "commonMistake": "不要与'later'（稍后）混淆",
+        "lambda": 10
+      },
+      {
+        "word": "aching",
+        "cues": [
+          { "type": "context", "text": "my back has been constantly ___", "strength": 0 },
+          { "type": "feeling", "text": "持续的、钝痛的感觉", "strength": 0 },
+          { "type": "image", "text": "😣💢 dull, persistent pain", "strength": 0 }
+        ],
+        "translation": "疼痛的、酸痛的",
+        "example": "My legs are aching after the long run.",
+        "commonMistake": "ache强调持续的钝痛，不同于sharp pain（刺痛）",
+        "lambda": 10
+      },
+      {
+        "word": "routine",
+        "cues": [
+          { "type": "context", "text": "start a push-up ___", "strength": 0 },
+          { "type": "pattern", "text": "规律的、重复的活动安排", "strength": 0 },
+          { "type": "synonym", "text": "habit, schedule, regimen", "strength": 0 }
+        ],
+        "translation": "常规、例行程序",
+        "example": "She follows a strict morning routine.",
+        "commonMistake": "routine可以是名词（例行公事）或形容词（常规的）",
+        "lambda": 10
+      },
+      {
+        "word": "muscles",
+        "cues": [
+          { "type": "context", "text": "shoulder and back ___", "strength": 0 },
+          { "type": "anatomy", "text": "身体组织，负责运动", "strength": 0 },
+          { "type": "image", "text": "💪 muscle tissue", "strength": 0 }
+        ],
+        "translation": "肌肉",
+        "example": "Exercise helps develop your muscles.",
+        "commonMistake": "muscle（单数）vs muscles（复数），注意发音 /'mʌsl/",
+        "lambda": 10
+      }
+    ],
+    "sentences": [
+      {
+        "id": 1,
+        "title": "句子1：时间状语",
+        "sentence": "Lately, my back has been constantly aching.",
+        "prediction": {
+          "question": "看到'Lately'开头，说话人最可能要描述什么？",
+          "wrongOptions": [
+            "过去很久的事情（误解时间范围）",
+            "将来的计划（误解时态）",
+            "别人的情况（误解主语）"
+          ],
+          "correctAnswer": "最近发生的持续状况",
+          "explanation": "Lately = 最近，has been aching = 现在完成进行时，表示从过去某时开始持续到现在的状态。"
+        },
+        "grammar": {
+          "pattern": "时间副词 + 现在完成进行时",
+          "breakdown": {
+            "Lately": "时间副词（最近）",
+            "my back": "主语",
+            "has been": "现在完成时助动词",
+            "constantly": "频率副词（持续地）",
+            "aching": "现在分词（疼痛）"
+          }
+        },
+        "lambda": 10
+      },
+      {
+        "id": 2,
+        "title": "句子2：解决方案",
+        "sentence": "I need to start a push-up routine to build up my shoulder and back muscles.",
+        "prediction": {
+          "question": "说话人选择'push-up routine'的主要目的是？",
+          "wrongOptions": [
+            "减肥瘦身（误解目标）",
+            "娱乐休闲（误解性质）",
+            "展示力量（误解动机）"
+          ],
+          "correctAnswer": "针对性地增强肩背肌肉",
+          "explanation": "to build up my shoulder and back muscles明确说明目的是增强特定部位的肌肉，这是针对背痛问题的解决方案。"
+        },
+        "grammar": {
+          "pattern": "主语 + need to + 动词 + 宾语 + 目的状语",
+          "breakdown": {
+            "I need to": "需要做某事",
+            "start": "开始",
+            "a push-up routine": "俯卧撑训练计划",
+            "to build up": "目的：为了增强",
+            "my shoulder and back muscles": "特定部位的肌肉"
+          }
+        },
+        "lambda": 10
+      }
+    ]
+  },
+  "backPainSentences": {
+    "fullText": "My mental state is quite poor today. It feels like I'm sick and I'm constantly drowsy. Maybe I've caught some kind of virus. Perhaps fasting could help alleviate it.",
+    "vocabulary": [
+      {
+        "word": "mental state",
+        "cues": [
+          { "type": "context", "text": "My ___ is quite poor today", "strength": 0 },
+          { "type": "synonym", "text": "psychological condition / 心理状态", "strength": 0 },
+          { "type": "image", "text": "🧠💭", "strength": 0 }
+        ],
+        "translation": "心理/精神状态",
+        "example": "Her mental state improved after therapy.",
+        "commonMistake": "不要与'mental'（仅指智力）混淆，这里指整体心理状况",
+        "lambda": 10
+      },
+      {
+        "word": "drowsy",
+        "cues": [
+          { "type": "context", "text": "I'm constantly ___", "strength": 0 },
+          { "type": "symptom", "text": "想睡觉、困倦的感觉", "strength": 0 },
+          { "type": "image", "text": "😴💤", "strength": 0 }
+        ],
+        "translation": "困倦的、昏昏欲睡的",
+        "example": "The medication made him feel drowsy.",
+        "commonMistake": "drowsy强调困倦感，不同于tired（疲劳）或sleepy（想睡）",
+        "lambda": 10
+      },
+      {
+        "word": "virus",
+        "cues": [
+          { "type": "context", "text": "caught some kind of ___", "strength": 0 },
+          { "type": "category", "text": "病原体：bacteria/virus/fungus", "strength": 0 },
+          { "type": "image", "text": "🦠", "strength": 0 }
+        ],
+        "translation": "病毒",
+        "example": "The flu is caused by a virus.",
+        "commonMistake": "virus（病毒）vs bacteria（细菌），两者是不同类型的病原体",
+        "lambda": 10
+      },
+      {
+        "word": "alleviate",
+        "cues": [
+          { "type": "context", "text": "help ___ it", "strength": 0 },
+          { "type": "synonym", "text": "reduce, ease, relieve", "strength": 0 },
+          { "type": "opposite", "text": "反义：worsen, aggravate", "strength": 0 }
+        ],
+        "translation": "减轻、缓解",
+        "example": "Medicine can alleviate pain.",
+        "commonMistake": "alleviate强调减轻程度，不是完全消除（eliminate）",
+        "lambda": 10
+      }
+    ],
+    "sentences": [
+      {
+        "id": 1,
+        "title": "句子1：描述状态",
+        "sentence": "My mental state is quite poor today.",
+        "prediction": {
+          "question": "根据'mental state is poor'，你认为接下来可能说什么？",
+          "wrongOptions": [
+            "我的钱包丢了（误解mental为金钱相关）",
+            "我的房间很脏（误解state为物理状态）",
+            "我很穷（误解poor为经济状况）"
+          ],
+          "correctAnswer": "描述具体的心理/身体症状",
+          "explanation": "mental state = 心理状态，poor = 糟糕的。这是在描述精神/心理方面的不适。"
+        },
+        "grammar": {
+          "pattern": "主语 + be动词 + 程度副词 + 形容词 + 时间",
+          "breakdown": {
+            "My mental state": "主语（我的精神状态）",
+            "is": "系动词",
+            "quite": "程度副词（相当、很）",
+            "poor": "形容词（差的、糟糕的）",
+            "today": "时间状语"
+          }
+        },
+        "lambda": 10
+      },
+      {
+        "id": 2,
+        "title": "句子2：具体症状",
+        "sentence": "It feels like I'm sick and I'm constantly drowsy.",
+        "prediction": {
+          "question": "看到'constantly drowsy'，判断说话人最可能需要什么？",
+          "wrongOptions": [
+            "喝更多咖啡保持清醒（对抗症状）",
+            "继续工作硬撑（忽视问题）",
+            "吃更多东西补充能量（误解原因）"
+          ],
+          "correctAnswer": "休息或就医",
+          "explanation": "constantly drowsy（持续困倦）配合feels like I'm sick，说明这是病理性疲劳，需要休息或医疗干预，而非简单的提神。"
+        },
+        "grammar": {
+          "pattern": "It feels like + 从句 + and + 并列从句",
+          "breakdown": {
+            "It feels like": "感觉像是...",
+            "I'm sick": "我生病了",
+            "and": "并列连词",
+            "I'm constantly drowsy": "我持续困倦",
+            "constantly": "频率副词（持续地、不断地）"
+          }
+        },
+        "lambda": 10
+      },
+      {
+        "id": 3,
+        "title": "句子3：病因推测",
+        "sentence": "Maybe I've caught some kind of virus.",
+        "prediction": {
+          "question": "为什么说话人推测是'virus'而不是'bacteria'？",
+          "wrongOptions": [
+            "病毒更常见（过度泛化）",
+            "病毒听起来更严重（情绪偏差）",
+            "说话人是医生所以知道（假设专业）"
+          ],
+          "correctAnswer": "这只是不确定的猜测（Maybe表明）",
+          "explanation": "Maybe（也许）和some kind of（某种）都表明这是不确定的推测，说话人并不真正知道病因。virus只是可能性之一。"
+        },
+        "grammar": {
+          "pattern": "Maybe + 现在完成时（推测过去发生的事）",
+          "breakdown": {
+            "Maybe": "或许、可能（表不确定）",
+            "I've caught": "我已经感染了（现在完成时）",
+            "some kind of": "某种（不确定的类型）",
+            "virus": "病毒"
+          }
+        },
+        "lambda": 10
+      },
+      {
+        "id": 4,
+        "title": "句子4：解决方案",
+        "sentence": "Perhaps fasting could help alleviate it.",
+        "prediction": {
+          "question": "说话人对'fasting'（禁食）的态度是？",
+          "wrongOptions": [
+            "非常确信有效（过度自信）",
+            "医生建议的标准治疗（误认权威）",
+            "唯一的解决方案（排他性错误）"
+          ],
+          "correctAnswer": "不太确定的尝试性想法",
+          "explanation": "Perhaps（也许）+ could（可能）+ help（帮助），三重不确定性表达。这是一个tentative suggestion（试探性建议），不是confident recommendation。"
+        },
+        "grammar": {
+          "pattern": "Perhaps + 情态动词 + 动词 + 宾语",
+          "breakdown": {
+            "Perhaps": "或许（比maybe更正式的不确定）",
+            "fasting": "禁食（动名词作主语）",
+            "could help": "可能有助于（情态动词表可能性）",
+            "alleviate": "减轻、缓解",
+            "it": "指代前面的症状"
+          }
+        },
+        "lambda": 10
+      }
+    ]
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "mentalStateSentences": [
+    {
+      "word": "mental state",
+      "cues": [
+        { "type": "context", "text": "My ___ is quite poor today", "strength": 0 },
+        { "type": "synonym", "text": "psychological condition / 心理状态", "strength": 0 },
+        { "type": "image", "text": "🧠💭", "strength": 0 }
+      ],
+      "translation": "心理/精神状态",
+      "example": "Her mental state improved after therapy.",
+      "commonMistake": "不要与'mental'（仅指智力）混淆，这里指整体心理状况",
+      "lambda": 10
+    },
+    {
+      "word": "drowsy",
+      "cues": [
+        { "type": "context", "text": "I'm constantly ___", "strength": 0 },
+        { "type": "symptom", "text": "想睡觉、困倦的感觉", "strength": 0 },
+        { "type": "image", "text": "😴💤", "strength": 0 }
+      ],
+      "translation": "困倦的、昏昏欲睡的",
+      "example": "The medication made him feel drowsy.",
+      "commonMistake": "drowsy强调困倦感，不同于tired（疲劳）或sleepy（想睡）",
+      "lambda": 10
+    },
+    {
+      "word": "virus",
+      "cues": [
+        { "type": "context", "text": "caught some kind of ___", "strength": 0 },
+        { "type": "category", "text": "病原体：bacteria/virus/fungus", "strength": 0 },
+        { "type": "image", "text": "🦠", "strength": 0 }
+      ],
+      "translation": "病毒",
+      "example": "The flu is caused by a virus.",
+      "commonMistake": "virus（病毒）vs bacteria（细菌），两者是不同类型的病原体",
+      "lambda": 10
+    },
+    {
+      "word": "fasting",
+      "cues": [
+        { "type": "context", "text": "___ could help alleviate it", "strength": 0 },
+        { "type": "definition", "text": "一段时间不吃东西", "strength": 0 },
+        { "type": "image", "text": "🚫🍽️", "strength": 0 }
+      ],
+      "translation": "禁食、斋戒",
+      "example": "Some people practice intermittent fasting.",
+      "commonMistake": "fasting（禁食）vs dieting（节食），前者是完全不吃，后者是控制饮食",
+      "lambda": 10
+    },
+    {
+      "word": "alleviate",
+      "cues": [
+        { "type": "context", "text": "help ___ it", "strength": 0 },
+        { "type": "synonym", "text": "reduce, ease, relieve", "strength": 0 },
+        { "type": "opposite", "text": "反义：worsen, aggravate", "strength": 0 }
+      ],
+      "translation": "减轻、缓解",
+      "example": "Medicine can alleviate pain.",
+      "commonMistake": "alleviate强调减轻程度，不是完全消除（eliminate）",
+      "lambda": 10
+    },
+    {
+      "word": "constantly",
+      "cues": [
+        { "type": "context", "text": "I'm ___ drowsy", "strength": 0 },
+        { "type": "frequency", "text": "持续不断地、一直", "strength": 0 },
+        { "type": "synonym", "text": "continuously, persistently", "strength": 0 }
+      ],
+      "translation": "持续地、不断地",
+      "example": "She constantly checks her phone.",
+      "commonMistake": "constantly（持续）vs always（总是），前者强调无间断",
+      "lambda": 10
+    }
+  ],
+  "backPainVocabulary": [
+    {
+      "word": "lately",
+      "cues": [
+        { "type": "context", "text": "___, my back has been aching", "strength": 0 },
+        { "type": "synonym", "text": "recently / 最近", "strength": 0 },
+        { "type": "time", "text": "⏰ 指最近一段时间", "strength": 0 }
+      ],
+      "translation": "最近、近来",
+      "example": "Lately, I've been feeling tired.",
+      "commonMistake": "不要与'later'（稍后）混淆",
+      "lambda": 10
+    },
+    {
+      "word": "aching",
+      "cues": [
+        { "type": "context", "text": "my back has been constantly ___", "strength": 0 },
+        { "type": "feeling", "text": "持续的、钝痛的感觉", "strength": 0 },
+        { "type": "image", "text": "😣💢 dull, persistent pain", "strength": 0 }
+      ],
+      "translation": "疼痛的、酸痛的",
+      "example": "My legs are aching after the long run.",
+      "commonMistake": "ache强调持续的钝痛，不同于sharp pain（刺痛）",
+      "lambda": 10
+    },
+    {
+      "word": "push-up",
+      "cues": [
+        { "type": "context", "text": "start a ___ routine", "strength": 0 },
+        { "type": "action", "text": "俯卧撑动作", "strength": 0 },
+        { "type": "image", "text": "💪🏋️ 手臂支撑身体上下运动", "strength": 0 }
+      ],
+      "translation": "俯卧撑",
+      "example": "He does 50 push-ups every morning.",
+      "commonMistake": "注意连字符：push-up（名词），do push-ups（动词短语）",
+      "lambda": 10
+    },
+    {
+      "word": "routine",
+      "cues": [
+        { "type": "context", "text": "start a push-up ___", "strength": 0 },
+        { "type": "pattern", "text": "规律的、重复的活动安排", "strength": 0 },
+        { "type": "synonym", "text": "habit, schedule, regimen", "strength": 0 }
+      ],
+      "translation": "常规、例行程序",
+      "example": "She follows a strict morning routine.",
+      "commonMistake": "routine可以是名词（例行公事）或形容词（常规的）",
+      "lambda": 10
+    },
+    {
+      "word": "build up",
+      "cues": [
+        { "type": "context", "text": "___ my shoulder and back muscles", "strength": 0 },
+        { "type": "process", "text": "逐渐增强、积累", "strength": 0 },
+        { "type": "opposite", "text": "反义：break down, weaken", "strength": 0 }
+      ],
+      "translation": "增强、锻炼（肌肉）",
+      "example": "You need to build up your strength gradually.",
+      "commonMistake": "phrasal verb，build up强调渐进过程，不同于build（建造）",
+      "lambda": 10
+    },
+    {
+      "word": "muscles",
+      "cues": [
+        { "type": "context", "text": "shoulder and back ___", "strength": 0 },
+        { "type": "anatomy", "text": "身体组织，负责运动", "strength": 0 },
+        { "type": "image", "text": "💪 muscle tissue", "strength": 0 }
+      ],
+      "translation": "肌肉",
+      "example": "Exercise helps develop your muscles.",
+      "commonMistake": "muscle（单数）vs muscles（复数），注意发音 /'mʌsl/",
+      "lambda": 10
+    }
+  ]
+}

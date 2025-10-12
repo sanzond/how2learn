@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- AI Generator Form View -->
+    <record id="view_ai_generator_form" model="ir.ui.view">
+        <field name="name">learning.ai.generator.form</field>
+        <field name="model">learning.ai.generator</field>
+        <field name="arch" type="xml">
+            <form string="AI 生成学习数据(1)">
+                <header>
+                    <button name="action_generate_data" string="开始生成" type="object" 
+                            class="btn-primary" icon="fa-magic"
+                            attrs="{'invisible': [('status', 'in', ['generating'])]}"/>
+                    <button name="action_view_generated_data" string="查看生成数据" type="object" 
+                            class="btn-secondary" icon="fa-eye"
+                            attrs="{'invisible': [('status', '!=', 'success')]}"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,generating,success,error"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <span>AI 生成学习数据</span>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group string="基本设置">
+                            <field name="learning_set_id" readonly="1"/>
+                            <field name="ai_config_id" options="{'no_create': True}"/>
+                        </group>
+                        <group string="生成选项">
+                            <field name="generate_mode"/>
+                        </group>
+                    </group>
+                    
+                    <group string="学习集内容" attrs="{'invisible': [('learning_set_id', '=', False)]}">
+                        <field name="learning_set_id" readonly="1" invisible="1"/>
+                        <label for="full_text_display" string="完整文本内容："/>
+                        <div class="o_field_widget">
+                            <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 5px;">
+                                <field name="full_text_display" readonly="1" nolabel="1"/>
+                            </div>
+                        </div>
+                    </group>
+                    
+                    <group string="生成进度" attrs="{'invisible': [('status', '=', 'draft')]}">
+                        <field name="progress_message" readonly="1" nolabel="1"/>
+                    </group>
+                    
+                    <group string="错误信息" attrs="{'invisible': [('status', '!=', 'error')]}">
+                        <field name="error_message" readonly="1" nolabel="1"/>
+                    </group>
+                    
+                    <notebook attrs="{'invisible': [('status', 'in', ['draft'])]}">
+                        <page string="调用详情" name="call_details">
+                            <group>
+                                <group string="API调用信息">
+                                    <field name="ai_model_used" readonly="1"/>
+                                    <field name="api_call_time" readonly="1"/>
+                                    <field name="api_response_time" readonly="1"/>
+                                    <field name="tokens_used" readonly="1"/>
+                                    <field name="api_cost_estimate" readonly="1"/>
+                                </group>
+                            </group>
+                            
+                            <separator string="详细调用日志"/>
+                            <field name="call_log" readonly="1" nolabel="1" widget="text" style="width: 100%; min-height: 300px;"/>
+                        </page>
+                        
+                        <page string="提示词" name="prompt_details" attrs="{'invisible': [('prompt_used', '=', False)]}">
+                            <group string="使用的提示词">
+                                <field name="prompt_used" readonly="1" nolabel="1" widget="text"/>
+                            </group>
+                        </page>
+                        
+                        <page string="原始响应" name="raw_response" attrs="{'invisible': [('api_response_raw', '=', False)]}">
+                            <group string="API原始响应">
+                                <field name="api_response_raw" readonly="1" nolabel="1" widget="text"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <footer>
+                    <button string="关闭" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- AI Generator Data View Form -->
+    <record id="view_ai_generator_data_form" model="ir.ui.view">
+        <field name="name">learning.ai.generator.data.form</field>
+        <field name="model">learning.ai.generator</field>
+        <field name="arch" type="xml">
+            <form string="生成的数据详情">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <span>生成的学习数据详情</span>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group>
+                            <field name="learning_set_id" readonly="1"/>
+                            <field name="status" readonly="1"/>
+                            <field name="ai_model_used" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="api_call_time" readonly="1"/>
+                            <field name="tokens_used" readonly="1"/>
+                            <field name="api_cost_estimate" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="生成的JSON数据" name="json_data">
+                            <separator string="生成的JSON数据"/>
+                            <field name="generated_data" readonly="1" nolabel="1" widget="text" style="width: 100%; min-height: 400px;"/>
+                        </page>
+                        
+                        <page string="API调用详情" name="call_details">
+                            <group>
+                                <group string="API调用信息">
+                                    <field name="ai_model_used" readonly="1"/>
+                                    <field name="api_call_time" readonly="1"/>
+                                    <field name="api_response_time" readonly="1"/>
+                                    <field name="tokens_used" readonly="1"/>
+                                    <field name="api_cost_estimate" readonly="1"/>
+                                </group>
+                            </group>
+                            
+                            <group string="详细调用日志">
+                                <div class="o_field_widget o_field_text">
+                                    <field name="call_log" readonly="1" nolabel="1" widget="text" style="width: 100%; min-height: 300px;"/>
+                                </div>
+                            </group>
+                        </page>
+                        
+                        <page string="使用的提示词" name="prompt_details" attrs="{'invisible': [('prompt_used', '=', False)]}">
+                            <separator string="完整提示词内容"/>
+                            <field name="prompt_used" readonly="1" nolabel="1" widget="text" style="width: 100%; min-height: 400px;"/>
+                        </page>
+                        
+                        <page string="API原始响应" name="raw_response" attrs="{'invisible': [('api_response_raw', '=', False)]}">
+                            <separator string="API返回的原始数据"/>
+                            <field name="api_response_raw" readonly="1" nolabel="1" widget="text" style="width: 100%; min-height: 400px;"/>
+                        </page>
+                        
+                        <page string="错误信息" name="error_details" attrs="{'invisible': [('status', '!=', 'error')]}">
+                            <separator string="异常详情"/>
+                            <field name="error_message" readonly="1" nolabel="1" widget="text" style="width: 100%; min-height: 200px;"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <footer>
+                    <button string="关闭" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- AI Generator Action -->
+    <record id="action_ai_generator" model="ir.actions.act_window">
+        <field name="name">AI 生成学习数据</field>
+        <field name="res_model">learning.ai.generator</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_ai_generator_form"/>
+    </record>
+</odoo>

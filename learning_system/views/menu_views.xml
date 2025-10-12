@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main Menu -->
+    <menuitem id="menu_learning_system_root"
+              name="Learning System"
+              sequence="10"/>
+
+    <!-- Learning Sets Menu -->
+    <menuitem id="menu_learning_sets"
+              name="Learning Sets"
+              parent="menu_learning_system_root"
+              action="action_learning_set"
+              sequence="10"/>
+
+    <!-- Vocabulary Menu -->
+    <menuitem id="menu_vocabulary"
+              name="Vocabulary"
+              parent="menu_learning_system_root"
+              action="action_learning_vocabulary"
+              sequence="20"/>
+
+    <!-- Sentences Menu -->
+    <menuitem id="menu_sentences"
+              name="Sentences"
+              parent="menu_learning_system_root"
+              action="action_learning_sentence"
+              sequence="30"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="menu_learning_config"
+              name="Configuration"
+              parent="menu_learning_system_root"
+              sequence="100"/>
+
+    <!-- Cues Menu under Configuration -->
+    <menuitem id="menu_cues"
+              name="Learning Cues"
+              parent="menu_learning_config"
+              action="action_learning_cue"
+              sequence="10"/>
+</odoo>

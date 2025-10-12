@@ -1,0 +1,12 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_learning_set_user,learning.set.user,model_learning_set,base.group_user,1,1,1,1
+access_learning_vocabulary_user,learning.vocabulary.user,model_learning_vocabulary,base.group_user,1,1,1,1
+access_learning_sentence_user,learning.sentence.user,model_learning_sentence,base.group_user,1,1,1,1
+access_learning_cue_user,learning.cue.user,model_learning_cue,base.group_user,1,1,1,1
+access_learning_import_wizard_user,learning.import.wizard.user,model_learning_import_wizard,base.group_user,1,1,1,1
+access_learning_ai_config_user,learning.ai.config.user,model_learning_ai_config,base.group_user,1,1,1,1
+access_learning_ai_generator_user,learning.ai.generator.user,model_learning_ai_generator,base.group_user,1,1,1,1
+access_learning_set_public,learning.set.public,model_learning_set,base.group_public,1,0,0,0
+access_learning_vocabulary_public,learning.vocabulary.public,model_learning_vocabulary,base.group_public,1,0,0,0
+access_learning_sentence_public,learning.sentence.public,model_learning_sentence,base.group_public,1,0,0,0
+access_learning_cue_public,learning.cue.public,model_learning_cue,base.group_public,1,0,0,0

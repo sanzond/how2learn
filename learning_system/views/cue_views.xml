@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Cue Tree View -->
+    <record id="view_learning_cue_tree" model="ir.ui.view">
+        <field name="name">learning.cue.tree</field>
+        <field name="model">learning.cue</field>
+        <field name="arch" type="xml">
+            <tree string="Learning Cues">
+                <field name="sequence" widget="handle"/>
+                <field name="vocabulary_id"/>
+                <field name="cue_type_char"/>
+                <field name="text"/>
+                <field name="strength"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Cue Form View -->
+    <record id="view_learning_cue_form" model="ir.ui.view">
+        <field name="name">learning.cue.form</field>
+        <field name="model">learning.cue</field>
+        <field name="arch" type="xml">
+            <form string="Learning Cue">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                            attrs="{'invisible': [('active', '=', True)]}"/>
+                    <group>
+                        <group>
+                            <field name="vocabulary_id"/>
+                            <field name="cue_type_char" placeholder="输入线索类型，如：context, synonym, time, feeling, image, pattern, anatomy, category, opposite, symptom, purpose 等"/>
+                            <field name="strength"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="text"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Cue Action -->
+    <record id="action_learning_cue" model="ir.actions.act_window">
+        <field name="name">Learning Cues</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">learning.cue</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first learning cue!
+            </p>
+            <p>
+                Learning cues help students remember vocabulary through different contexts.
+            </p>
+        </field>
+    </record>
+</odoo>

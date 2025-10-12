@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- AI Call Statistics Tree View -->
+    <record id="view_ai_generator_statistics_tree" model="ir.ui.view">
+        <field name="name">learning.ai.generator.statistics.tree</field>
+        <field name="model">learning.ai.generator</field>
+        <field name="arch" type="xml">
+            <tree string="AI调用统计" default_order="api_call_time desc">
+                <field name="api_call_time"/>
+                <field name="learning_set_id"/>
+                <field name="ai_model_used"/>
+                <field name="status"/>
+                <field name="tokens_used"/>
+                <field name="api_cost_estimate" sum="总成本"/>
+                <field name="api_response_time"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- AI Call Statistics Search View -->
+    <record id="view_ai_generator_statistics_search" model="ir.ui.view">
+        <field name="name">learning.ai.generator.statistics.search</field>
+        <field name="model">learning.ai.generator</field>
+        <field name="arch" type="xml">
+            <search string="AI调用统计搜索">
+                <field name="learning_set_id"/>
+                <field name="ai_model_used"/>
+                <field name="status"/>
+                <field name="api_call_time"/>
+                
+                <filter name="success_only" string="成功调用" domain="[('status', '=', 'success')]"/>
+                <filter name="error_only" string="失败调用" domain="[('status', '=', 'error')]"/>
+                <filter name="high_cost" string="高成本调用" domain="[('api_cost_estimate', '>', 0.01)]"/>
+                
+                <separator/>
+                <filter name="recent" string="最近调用" domain="[('api_call_time', '!=', False)]"/>
+                
+                <group expand="0" string="分组">
+                    <filter name="group_by_model" string="按模型" context="{'group_by': 'ai_model_used'}"/>
+                    <filter name="group_by_status" string="按状态" context="{'group_by': 'status'}"/>
+                    <filter name="group_by_date" string="按日期" context="{'group_by': 'api_call_time:day'}"/>
+                    <filter name="group_by_learning_set" string="按学习集" context="{'group_by': 'learning_set_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- AI Call Statistics Action -->
+    <record id="action_ai_call_statistics" model="ir.actions.act_window">
+        <field name="name">AI调用统计</field>
+        <field name="res_model">learning.ai.generator</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_ai_generator_statistics_tree"/>
+        <field name="search_view_id" ref="view_ai_generator_statistics_search"/>
+        <field name="domain">[('status', '!=', 'draft')]</field>
+        <field name="context">{
+            'search_default_success_only': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                还没有AI调用记录
+            </p>
+            <p>
+                这里显示所有AI生成学习数据的调用统计信息，包括：<br/>
+                • 使用的Token数量<br/>
+                • 预估调用成本<br/>
+                • 响应时间<br/>
+                • 调用状态等
+            </p>
+        </field>
+    </record>
+
+    <!-- Add menu item -->
+    <menuitem id="menu_ai_call_statistics"
+              name="AI调用统计"
+              parent="menu_learning_config"
+              action="action_ai_call_statistics"
+              sequence="30"/>
+</odoo>

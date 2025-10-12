@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sentence Tree View -->
+    <record id="view_learning_sentence_tree" model="ir.ui.view">
+        <field name="name">learning.sentence.tree</field>
+        <field name="model">learning.sentence</field>
+        <field name="arch" type="xml">
+            <tree string="Sentences">
+                <field name="sequence" widget="handle"/>
+                <field name="learning_set_id"/>
+                <field name="sentence_id"/>
+                <field name="title"/>
+                <field name="sentence"/>
+                <field name="lambda_value"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Sentence Form View -->
+    <record id="view_learning_sentence_form" model="ir.ui.view">
+        <field name="name">learning.sentence.form</field>
+        <field name="model">learning.sentence</field>
+        <field name="arch" type="xml">
+            <form string="Sentence">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                            attrs="{'invisible': [('active', '=', True)]}"/>
+                    <group>
+                        <group>
+                            <field name="learning_set_id"/>
+                            <field name="sentence_id"/>
+                            <field name="title"/>
+                            <field name="lambda_value"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="sentence"/>
+                    </group>
+                    <notebook>
+                        <page string="Prediction" name="prediction">
+                            <group>
+                                <field name="prediction_question"/>
+                            </group>
+                            <group>
+                                <field name="correct_answer"/>
+                            </group>
+                            <group>
+                                <field name="wrong_options" placeholder="Enter one wrong option per line"/>
+                            </group>
+                            <group>
+                                <field name="explanation"/>
+                            </group>
+                        </page>
+                        <page string="Grammar" name="grammar">
+                            <group>
+                                <field name="grammar_pattern"/>
+                            </group>
+                            <group>
+                                <field name="grammar_breakdown" widget="ace" 
+                                       options="{'mode': 'json'}" 
+                                       placeholder='{"component1": "description1", "component2": "description2"}'/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Sentence Action -->
+    <record id="action_learning_sentence" model="ir.actions.act_window">
+        <field name="name">Sentences</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">learning.sentence</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first learning sentence!
+            </p>
+            <p>
+                Add sentences with prediction questions and grammar analysis.
+            </p>
+        </field>
+    </record>
+</odoo>

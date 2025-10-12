@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统一学习系统 - 词汇与句子理解</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { AlertCircle, CheckCircle, XCircle, Zap, TrendingUp, BookOpen, Brain, AlertTriangle } = lucideReact;
+
+        const UnifiedLearningSystem = () => {
+          const [learningData, setLearningData] = useState(null);
+          const [learningMode, setLearningMode] = useState('vocabulary'); // 'vocabulary' or 'sentence'
+          const [currentSet, setCurrentSet] = useState('mentalStateSentences');
+          
+          // 词汇学习状态
+          const [currentIndex, setCurrentIndex] = useState(0);
+          const [showAnswer, setShowAnswer] = useState(false);
+          const [userAnswer, setUserAnswer] = useState("");
+          const [feedback, setFeedback] = useState(null);
+          const [vocabularyLearningData, setVocabularyLearningData] = useState([]);
+          
+          // 句子学习状态
+          const [currentUnit, setCurrentUnit] = useState(0);
+          const [sentenceStage, setSentenceStage] = useState('prediction');
+          const [selectedOption, setSelectedOption] = useState(null);
+          const [sentenceLearningData, setSentenceLearningData] = useState([]);
+
+          // 加载JSON数据
+          useEffect(() => {
+            const loadLearningData = async () => {
+              try {
+                const response = await fetch('./unified_learning_data.json');
+                const data = await response.json();
+                setLearningData(data);
+                
+                // 初始化词汇学习数据
+                if (data[currentSet] && data[currentSet].vocabulary) {
+                  const initialVocabData = data[currentSet].vocabulary.map(v => ({ 
+                    ...v, 
+                    totalStrength: 0, 
+                    trials: 0 
+                  }));
+                  setVocabularyLearningData(initialVocabData);
+                }
+                
+                // 初始化句子学习数据
+                if (data[currentSet] && data[currentSet].sentences) {
+                  const initialSentenceData = data[currentSet].sentences.map(s => ({ 
+                    ...s, 
+                    V: 0, 
+                    trials: 0 
+                  }));
+                  setSentenceLearningData(initialSentenceData);
+                }
+              } catch (error) {
+                console.error('加载学习数据失败:', error);
+                setLearningData({
+                  mentalStateSentences: { vocabulary: [], sentences: [] },
+                  backPainSentences: { vocabulary: [], sentences: [] }
+                });
+              }
+            };
+
+            loadLearningData();
+          }, []);
+
+          // 当切换数据集或学习模式时重新初始化
+          useEffect(() => {
+            if (learningData && learningData[currentSet]) {
+              if (learningData[currentSet].vocabulary) {
+                const initialVocabData = learningData[currentSet].vocabulary.map(v => ({ 
+                  ...v, 
+                  totalStrength: 0, 
+                  trials: 0 
+                }));
+                setVocabularyLearningData(initialVocabData);
+              }
+              
+              if (learningData[currentSet].sentences) {
+                const initialSentenceData = learningData[currentSet].sentences.map(s => ({ 
+                  ...s, 
+                  V: 0, 
+                  trials: 0 
+                }));
+                setSentenceLearningData(initialSentenceData);
+              }
+              
+              // 重置状态
+              setCurrentIndex(0);
+              setCurrentUnit(0);
+              setShowAnswer(false);
+              setUserAnswer("");
+              setFeedback(null);
+              setSentenceStage('prediction');
+              setSelectedOption(null);
+            }
+          }, [currentSet, learningData]);
+
+          if (!learningData) {
+            return (
+              <div className="max-w-4xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-cyan-50 min-h-screen">
+                <div className="bg-white rounded-xl shadow-2xl p-8 text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                  <p className="text-gray-600">正在加载学习数据...</p>
+                </div>
+              </div>
+            );
+          }
+
+          // 词汇学习相关函数
+          const updateVocabularyStrength = (isCorrect) => {
+            if (!vocabularyLearningData[currentIndex]) return { predictionError: 0, deltaV: 0, newStrength: 0 };
+            
+            const currentWord = vocabularyLearningData[currentIndex];
+            const alpha = 0.3;
+            const beta = 0.4;
+            const lambda = isCorrect ? currentWord.lambda : 0;
+            const V_all = currentWord.totalStrength;
+            
+            const predictionError = lambda - V_all;
+            const deltaV = alpha * beta * predictionError;
+            const newStrength = Math.max(0, Math.min(10, V_all + deltaV));
+
+            const newData = [...vocabularyLearningData];
+            newData[currentIndex] = {
+              ...currentWord,
+              totalStrength: newStrength,
+              trials: currentWord.trials + 1
+            };
+            setVocabularyLearningData(newData);
+
+            return { predictionError, deltaV, newStrength };
+          };
+
+          const handleVocabularySubmit = () => {
+            if (!vocabularyLearningData[currentIndex]) return;
+            
+            const isCorrect = userAnswer.toLowerCase().trim() === vocabularyLearningData[currentIndex].word.toLowerCase();
+            const { predictionError, deltaV, newStrength } = updateVocabularyStrength(isCorrect);
+            
+            setFeedback({
+              isCorrect,
+              predictionError: predictionError.toFixed(2),
+              deltaV: deltaV.toFixed(2),
+              newStrength: newStrength.toFixed(2)
+            });
+            setShowAnswer(true);
+          };
+
+          // 句子学习相关函数
+          const updateSentenceStrength = (isCorrect) => {
+            if (!sentenceLearningData[currentUnit]) return { predictionError: 0, deltaV: 0, newV: 0 };
+            
+            const unit = sentenceLearningData[currentUnit];
+            const alpha = 0.35;
+            const beta = 0.45;
+            const lambda = isCorrect ? unit.lambda : 0;
+            const V_all = unit.V;
+            
+            const predictionError = lambda - V_all;
+            const deltaV = alpha * beta * predictionError;
+            const newV = Math.max(0, Math.min(10, V_all + deltaV));
+            
+            const newData = [...sentenceLearningData];
+            newData[currentUnit] = {
+              ...unit,
+              V: newV,
+              trials: unit.trials + 1
+            };
+            setSentenceLearningData(newData);
+            
+            return { predictionError, deltaV, newV };
+          };
+
+          const handleSentencePredictionSubmit = () => {
+            if (selectedOption === null || !sentenceLearningData[currentUnit]) return;
+            
+            const isCorrect = selectedOption === 'correct';
+            updateSentenceStrength(isCorrect);
+            
+            setSentenceStage('feedback');
+          };
+
+          const handleSentenceNext = () => {
+            if (sentenceStage === 'feedback') {
+              setSentenceStage('grammar');
+            } else if (sentenceStage === 'grammar') {
+              if (currentUnit < sentenceLearningData.length - 1) {
+                setCurrentUnit(currentUnit + 1);
+                setSentenceStage('prediction');
+                setSelectedOption(null);
+              } else {
+                setSentenceStage('complete');
+              }
+            }
+          };
+
+          const dataSets = {
+            mentalStateSentences: '背痛相关内容',
+            backPainSentences: '心理状态内容'
+          };
+
+          const learningModes = {
+            vocabulary: '词汇学习',
+            sentence: '句子理解'
+          };
+
+          return (
+            <div className="max-w-4xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-cyan-50 min-h-screen">
+              <div className="bg-white rounded-xl shadow-2xl p-8">
+                {/* 标题和模式选择 */}
+                <div className="flex items-center justify-between mb-6">
+                  <h1 className="text-3xl font-bold text-gray-800 flex items-center">
+                    <BookOpen className="mr-3 text-blue-600" size={32} />
+                    🎯 统一学习系统
+                  </h1>
+                </div>
+
+                {/* 学习模式选择 */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    学习模式：
+                  </label>
+                  <div className="flex gap-2">
+                    {Object.entries(learningModes).map(([key, label]) => (
+                      <button
+                        key={key}
+                        onClick={() => setLearningMode(key)}
+                        className={`px-4 py-2 rounded-lg transition ${
+                          learningMode === key
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 数据集选择 */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    学习内容：
+                  </label>
+                  <div className="flex gap-2">
+                    {Object.entries(dataSets).map(([key, label]) => (
+                      <button
+                        key={key}
+                        onClick={() => setCurrentSet(key)}
+                        className={`px-4 py-2 rounded-lg transition ${
+                          currentSet === key
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 完整句子显示 */}
+                {learningData[currentSet] && learningData[currentSet].fullText && (
+                  <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 rounded-lg mb-8 text-white">
+                    <div className="text-sm opacity-80 mb-2">完整句子</div>
+                    <div className="text-lg font-medium">{learningData[currentSet].fullText}</div>
+                  </div>
+                )}
+
+                {/* 词汇学习模式 */}
+                {learningMode === 'vocabulary' && vocabularyLearningData.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-bold">📚 词汇学习模式</h2>
+                      <div className="text-sm text-gray-600">
+                        词汇 {currentIndex + 1} / {vocabularyLearningData.length}
+                      </div>
+                    </div>
+
+                    {/* 词汇学习内容 */}
+                    <div className="mb-8">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">掌握度进度</span>
+                        <span className="text-sm text-gray-600">
+                          {vocabularyLearningData[currentIndex].totalStrength.toFixed(1)} / {vocabularyLearningData[currentIndex].lambda}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${(vocabularyLearningData[currentIndex].totalStrength / vocabularyLearningData[currentIndex].lambda) * 100}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        试验次数: {vocabularyLearningData[currentIndex].trials}
+                      </div>
+                    </div>
+
+                    {/* 多重线索 */}
+                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg mb-6">
+                      <div className="flex items-start mb-4">
+                        <Zap className="text-yellow-600 mr-2 mt-1" size={20} />
+                        <h3 className="font-bold text-lg text-gray-800">多重线索 (Multiple Cues)</h3>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {vocabularyLearningData[currentIndex].cues.map((cue, idx) => (
+                          <div key={idx} className="bg-white p-4 rounded-lg shadow-sm">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-semibold text-gray-500 uppercase">
+                                {cue.type}
+                              </span>
+                            </div>
+                            <p className="text-gray-700 text-lg">{cue.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 词汇答题区域 */}
+                    {!showAnswer ? (
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          根据上面的线索，这个词是：
+                        </label>
+                        <input
+                          type="text"
+                          value={userAnswer}
+                          onChange={(e) => setUserAnswer(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleVocabularySubmit()}
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
+                          placeholder="输入英文单词..."
+                          autoFocus
+                        />
+                        <button
+                          onClick={handleVocabularySubmit}
+                          className="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+                        >
+                          提交答案
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mb-6">
+                        <div className={`p-6 rounded-lg mb-4 ${
+                          feedback.isCorrect 
+                            ? 'bg-green-50 border-2 border-green-500' 
+                            : 'bg-red-50 border-2 border-red-500'
+                        }`}>
+                          <div className="flex items-center mb-4">
+                            {feedback.isCorrect ? (
+                              <CheckCircle className="text-green-600 mr-2" size={24} />
+                            ) : (
+                              <XCircle className="text-red-600 mr-2" size={24} />
+                            )}
+                            <h3 className="text-xl font-bold">
+                              {feedback.isCorrect ? '正确！✓' : '需要继续学习'}
+                            </h3>
+                          </div>
+
+                          {/* 词汇详情 */}
+                          <div className="bg-white p-4 rounded-lg mb-4">
+                            <div className="mb-3">
+                              <span className="text-gray-600">单词：</span>
+                              <span className="font-bold text-2xl ml-2">{vocabularyLearningData[currentIndex].word}</span>
+                            </div>
+                            <div className="mb-3">
+                              <span className="text-gray-600">释义：</span>
+                              <span className="ml-2">{vocabularyLearningData[currentIndex].translation}</span>
+                            </div>
+                            <div className="mb-3">
+                              <span className="text-gray-600">例句：</span>
+                              <span className="ml-2 italic">{vocabularyLearningData[currentIndex].example}</span>
+                            </div>
+                            <div className="bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
+                              <span className="text-gray-600 font-semibold">⚠️ 常见错误：</span>
+                              <span className="ml-2 text-sm">{vocabularyLearningData[currentIndex].commonMistake}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => {
+                              setCurrentIndex((currentIndex - 1 + vocabularyLearningData.length) % vocabularyLearningData.length);
+                              setShowAnswer(false);
+                              setUserAnswer("");
+                              setFeedback(null);
+                            }}
+                            className="flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 transition"
+                          >
+                            ← 上一个
+                          </button>
+                          <button
+                            onClick={() => {
+                              setCurrentIndex((currentIndex + 1) % vocabularyLearningData.length);
+                              setShowAnswer(false);
+                              setUserAnswer("");
+                              setFeedback(null);
+                            }}
+                            className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+                          >
+                            下一个 →
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 句子学习模式 */}
+                {learningMode === 'sentence' && sentenceLearningData.length > 0 && sentenceStage !== 'complete' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-bold">🧠 句子理解模式</h2>
+                      <div className="text-sm text-gray-600">
+                        单元 {currentUnit + 1} / {sentenceLearningData.length}
+                      </div>
+                    </div>
+
+                    {/* 句子掌握度 */}
+                    <div className="mb-8">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">当前句子掌握度</span>
+                        <span className="text-sm text-gray-600">
+                          {sentenceLearningData[currentUnit].V.toFixed(1)} / 10 (试验: {sentenceLearningData[currentUnit].trials})
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all"
+                          style={{ width: `${(sentenceLearningData[currentUnit].V / 10) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* 当前句子 */}
+                    <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 rounded-lg mb-8 text-white">
+                      <div className="text-sm opacity-80 mb-2">{sentenceLearningData[currentUnit].title}</div>
+                      <div className="text-2xl font-bold">{sentenceLearningData[currentUnit].sentence}</div>
+                    </div>
+
+                    {/* 句子学习阶段 */}
+                    {sentenceStage === 'prediction' && (
+                      <div>
+                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded">
+                          <div className="flex items-start">
+                            <AlertTriangle className="text-yellow-600 mr-2 mt-1" size={20} />
+                            <div>
+                              <h3 className="font-bold mb-2">预测性问题（制造认知冲突）</h3>
+                              <p className="text-gray-700">{sentenceLearningData[currentUnit].prediction.question}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 mb-6">
+                          {sentenceLearningData[currentUnit].prediction.wrongOptions.map((option, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setSelectedOption(`wrong_${idx}`)}
+                              className={`w-full text-left p-4 rounded-lg border-2 transition ${
+                                selectedOption === `wrong_${idx}`
+                                  ? 'border-red-500 bg-red-50'
+                                  : 'border-gray-300 hover:border-gray-400 bg-white'
+                              }`}
+                            >
+                              {option}
+                            </button>
+                          ))}
+
+                          <button
+                            onClick={() => setSelectedOption('correct')}
+                            className={`w-full text-left p-4 rounded-lg border-2 transition ${
+                              selectedOption === 'correct'
+                                ? 'border-green-500 bg-green-50'
+                                : 'border-gray-300 hover:border-gray-400 bg-white'
+                            }`}
+                          >
+                            {sentenceLearningData[currentUnit].prediction.correctAnswer}
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={handleSentencePredictionSubmit}
+                          disabled={selectedOption === null}
+                          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          提交答案
+                        </button>
+                      </div>
+                    )}
+
+                    {sentenceStage === 'feedback' && (
+                      <div>
+                        <div className={`p-6 rounded-lg mb-6 ${
+                          selectedOption === 'correct' 
+                            ? 'bg-green-50 border-2 border-green-500' 
+                            : 'bg-red-50 border-2 border-red-500'
+                        }`}>
+                          <div className="flex items-center mb-4">
+                            {selectedOption === 'correct' ? (
+                              <CheckCircle className="text-green-600 mr-2" size={24} />
+                            ) : (
+                              <XCircle className="text-red-600 mr-2" size={24} />
+                            )}
+                            <h3 className="text-xl font-bold">
+                              {selectedOption === 'correct' ? '正确！理解准确 ✓' : '这是常见误解！'}
+                            </h3>
+                          </div>
+
+                          <div className="bg-white p-4 rounded-lg">
+                            <h4 className="font-bold text-sm text-gray-700 mb-2">💡 解释</h4>
+                            <p className="text-gray-700">{sentenceLearningData[currentUnit].prediction.explanation}</p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handleSentenceNext}
+                          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+                        >
+                          继续：查看语法分析 →
+                        </button>
+                      </div>
+                    )}
+
+                    {sentenceStage === 'grammar' && (
+                      <div>
+                        <div className="bg-indigo-50 p-6 rounded-lg mb-6">
+                          <h3 className="font-bold text-lg mb-4 flex items-center">
+                            <Brain className="mr-2 text-indigo-600" size={24} />
+                            语法结构分析
+                          </h3>
+
+                          <div className="bg-white p-4 rounded-lg mb-4">
+                            <div className="text-sm text-gray-600 mb-2">句型模式</div>
+                            <div className="font-mono text-blue-600 font-bold">
+                              {sentenceLearningData[currentUnit].grammar.pattern}
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            {Object.entries(sentenceLearningData[currentUnit].grammar.breakdown).map(([key, value], idx) => (
+                              <div key={idx} className="bg-white p-4 rounded-lg border-l-4 border-purple-400">
+                                <div className="font-mono text-gray-800 font-bold mb-1">{key}</div>
+                                <div className="text-sm text-gray-600">{value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handleSentenceNext}
+                          className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition"
+                        >
+                          {currentUnit < sentenceLearningData.length - 1 ? '下一个句子 →' : '完成训练 ✓'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 句子学习完成界面 */}
+                {learningMode === 'sentence' && sentenceStage === 'complete' && (
+                  <div className="text-center">
+                    <CheckCircle className="mx-auto text-green-600 mb-4" size={64} />
+                    <h2 className="text-3xl font-bold text-gray-800 mb-4">句子理解训练完成！</h2>
+                    <div className="text-6xl font-bold text-green-600 mb-2">
+                      {(sentenceLearningData.reduce((acc, s) => acc + s.V, 0) / sentenceLearningData.length).toFixed(1)} / 10
+                    </div>
+                    <p className="text-gray-600 mb-6">平均掌握度</p>
+                    
+                    <button
+                      onClick={() => {
+                        setCurrentUnit(0);
+                        setSentenceStage('prediction');
+                        setSelectedOption(null);
+                        setSentenceLearningData(sentenceLearningData.map(s => ({ ...s, V: 0, trials: 0 })));
+                      }}
+                      className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+                    >
+                      重新学习
+                    </button>
+                  </div>
+                )}
+
+                {/* 学习原理说明 */}
+                <div className="mt-8 p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500">
+                  <h4 className="font-bold mb-2 text-indigo-900">💡 学习原理（Rescorla-Wagner）</h4>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li><strong>统一数据源：</strong>词汇学习和句子理解使用同一套数据，确保内容一致性</li>
+                    <li><strong>多模态学习：</strong>通过词汇记忆和句子理解双重强化学习效果</li>
+                    <li><strong>认知科学：</strong>基于R-W理论的预测误差驱动学习机制</li>
+                    <li><strong>个性化进度：</strong>根据每个学习单元的掌握情况调整学习强度</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        ReactDOM.render(React.createElement(UnifiedLearningSystem), document.getElementById('root'));
+    </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <data>
+        <!-- OpenAI (ChatGPT) Configuration -->
+        <record id="ai_config_openai_gpt35" model="learning.ai.config">
+            <field name="provider_name">OpenAI GPT-3.5-turbo</field>
+            <field name="provider_type">openai</field>
+            <field name="api_url">https://api.openai.com/v1/chat/completions</field>
+            <field name="model_name">gpt-3.5-turbo</field>
+            <field name="api_key"></field>
+            <field name="timeout">60</field>
+            <field name="max_tokens">2000</field>
+            <field name="temperature">0.7</field>
+            <field name="active">True</field>
+            <field name="is_default">False</field>
+        </record>
+
+        <record id="ai_config_openai_gpt4" model="learning.ai.config">
+            <field name="provider_name">OpenAI GPT-4</field>
+            <field name="provider_type">openai</field>
+            <field name="api_url">https://api.openai.com/v1/chat/completions</field>
+            <field name="model_name">gpt-4</field>
+            <field name="api_key"></field>
+            <field name="timeout">120</field>
+            <field name="max_tokens">2000</field>
+            <field name="temperature">0.7</field>
+            <field name="active">True</field>
+            <field name="is_default">True</field>
+        </record>
+
+        <record id="ai_config_openai_gpt4_turbo" model="learning.ai.config">
+            <field name="provider_name">OpenAI GPT-4-turbo</field>
+            <field name="provider_type">openai</field>
+            <field name="api_url">https://api.openai.com/v1/chat/completions</field>
+            <field name="model_name">gpt-4-turbo</field>
+            <field name="api_key"></field>
+            <field name="timeout">90</field>
+            <field name="max_tokens">2000</field>
+            <field name="temperature">0.7</field>
+            <field name="active">True</field>
+            <field name="is_default">False</field>
+        </record>
+
+        <!-- Google Gemini Configuration -->
+        <record id="ai_config_gemini_pro" model="learning.ai.config">
+            <field name="provider_name">Google Gemini Pro</field>
+            <field name="provider_type">gemini</field>
+            <field name="api_url">https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent</field>
+            <field name="model_name">gemini-pro</field>
+            <field name="api_key"></field>
+            <field name="timeout">60</field>
+            <field name="max_tokens">2000</field>
+            <field name="temperature">0.7</field>
+            <field name="active">True</field>
+            <field name="is_default">False</field>
+        </record>
+
+        <record id="ai_config_gemini_pro_vision" model="learning.ai.config">
+            <field name="provider_name">Google Gemini Pro Vision</field>
+            <field name="provider_type">gemini</field>
+            <field name="api_url">https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent</field>
+            <field name="model_name">gemini-pro-vision</field>
+            <field name="api_key"></field>
+            <field name="timeout">90</field>
+            <field name="max_tokens">2000</field>
+            <field name="temperature">0.7</field>
+            <field name="active">True</field>
+            <field name="is_default">False</field>
+        </record>
+
+        <!-- DeepSeek Configuration -->
+        <record id="ai_config_deepseek_chat" model="learning.ai.config">
+            <field name="provider_name">DeepSeek Chat</field>
+            <field name="provider_type">deepseek</field>
+            <field name="api_url">https://api.deepseek.com/v1/chat/completions</field>
+            <field name="model_name">deepseek-chat</field>
+            <field name="api_key"></field>
+            <field name="timeout">60</field>
+            <field name="max_tokens">2000</field>
+            <field name="temperature">0.7</field>
+            <field name="active">True</field>
+            <field name="is_default">False</field>
+        </record>
+
+        <record id="ai_config_deepseek_coder" model="learning.ai.config">
+            <field name="provider_name">DeepSeek Coder</field>
+            <field name="provider_type">deepseek</field>
+            <field name="api_url">https://api.deepseek.com/v1/chat/completions</field>
+            <field name="model_name">deepseek-coder</field>
+            <field name="api_key"></field>
+            <field name="timeout">60</field>
+            <field name="max_tokens">2000</field>
+            <field name="temperature">0.6</field>
+            <field name="active">True</field>
+            <field name="is_default">False</field>
+        </record>
+
+        <!-- Anthropic Claude Configuration -->
+        <record id="ai_config_claude_sonnet" model="learning.ai.config">
+            <field name="provider_name">Anthropic Claude 3 Sonnet</field>
+            <field name="provider_type">claude</field>
+            <field name="api_url">https://api.anthropic.com/v1/messages</field>
+            <field name="model_name">claude-3-sonnet-20240229</field>
+            <field name="api_key"></field>
+            <field name="timeout">90</field>
+            <field name="max_tokens">2000</field>
+            <field name="temperature">0.7</field>
+            <field name="active">True</field>
+            <field name="is_default">False</field>
+        </record>
+
+        <record id="ai_config_claude_opus" model="learning.ai.config">
+            <field name="provider_name">Anthropic Claude 3 Opus</field>
+            <field name="provider_type">claude</field>
+            <field name="api_url">https://api.anthropic.com/v1/messages</field>
+            <field name="model_name">claude-3-opus-20240229</field>
+            <field name="api_key"></field>
+            <field name="timeout">120</field>
+            <field name="max_tokens">2000</field>
+            <field name="temperature">0.7</field>
+            <field name="active">True</field>
+            <field name="is_default">False</field>
+        </record>
+
+        <!-- Custom API Template -->
+        <record id="ai_config_custom_template" model="learning.ai.config">
+            <field name="provider_name">Custom API Template</field>
+            <field name="provider_type">custom</field>
+            <field name="api_url">https://your-api-endpoint.com/v1/chat/completions</field>
+            <field name="model_name">your-model-name</field>
+            <field name="api_key"></field>
+            <field name="timeout">60</field>
+            <field name="max_tokens">2000</field>
+            <field name="temperature">0.7</field>
+            <field name="active">False</field>
+            <field name="is_default">False</field>
+        </record>
+    </data>
+</odoo>

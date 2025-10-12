@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统一句子学习系统</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { Brain, AlertTriangle, CheckCircle2, XCircle, Lightbulb, BookOpen } = lucideReact;
+
+        const UnifiedSentenceLearning = () => {
+          const [sentenceData, setSentenceData] = useState(null);
+          const [currentSet, setCurrentSet] = useState('mentalStateSentences');
+          const [currentUnit, setCurrentUnit] = useState(0);
+          const [stage, setStage] = useState('prediction');
+          const [selectedOption, setSelectedOption] = useState(null);
+          const [strength, setStrength] = useState([]);
+
+          // 加载JSON数据
+          useEffect(() => {
+            const loadSentenceData = async () => {
+              try {
+                const response = await fetch('./sentence_data.json');
+                const data = await response.json();
+                setSentenceData(data);
+                
+                // 初始化学习强度数据
+                const initialStrength = data[currentSet].map(() => ({ V: 0, trials: 0 }));
+                setStrength(initialStrength);
+              } catch (error) {
+                console.error('加载句子数据失败:', error);
+                setSentenceData({
+                  mentalStateSentences: [],
+                  backPainSentences: []
+                });
+              }
+            };
+
+            loadSentenceData();
+          }, []);
+
+          // 当切换句子集时重新初始化
+          useEffect(() => {
+            if (sentenceData && sentenceData[currentSet]) {
+              const initialStrength = sentenceData[currentSet].map(() => ({ V: 0, trials: 0 }));
+              setStrength(initialStrength);
+              setCurrentUnit(0);
+              setStage('prediction');
+              setSelectedOption(null);
+            }
+          }, [currentSet, sentenceData]);
+
+          if (!sentenceData || !sentenceData[currentSet] || !sentenceData[currentSet].length) {
+            return React.createElement('div', {
+              className: "max-w-4xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen"
+            }, React.createElement('div', {
+              className: "bg-white rounded-xl shadow-2xl p-8 text-center"
+            }, [
+              React.createElement('div', {
+                key: 'spinner',
+                className: "animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"
+              }),
+              React.createElement('p', {
+                key: 'text',
+                className: "text-gray-600"
+              }, "正在加载句子数据...")
+            ]));
+          }
+
+          const learningUnits = sentenceData[currentSet];
+          const unit = learningUnits[currentUnit];
+          const currentStrength = strength[currentUnit] || { V: 0, trials: 0 };
+
+          const updateStrength = (isCorrect) => {
+            const alpha = 0.35;
+            const beta = 0.45;
+            const lambda = isCorrect ? unit.lambda : 0;
+            const V_all = currentStrength.V;
+            
+            const predictionError = lambda - V_all;
+            const deltaV = alpha * beta * predictionError;
+            const newV = Math.max(0, Math.min(10, V_all + deltaV));
+            
+            const newStrength = [...strength];
+            newStrength[currentUnit] = {
+              V: newV,
+              trials: currentStrength.trials + 1
+            };
+            setStrength(newStrength);
+            
+            return { predictionError, deltaV, newV };
+          };
+
+          const handlePredictionSubmit = () => {
+            if (selectedOption === null) return;
+            
+            const isCorrect = selectedOption === 'correct';
+            updateStrength(isCorrect);
+            
+            setStage('feedback');
+          };
+
+          const handleNext = () => {
+            if (stage === 'feedback') {
+              setStage('grammar');
+            } else if (stage === 'grammar') {
+              setStage('semantic');
+            } else if (stage === 'semantic') {
+              if (currentUnit < learningUnits.length - 1) {
+                setCurrentUnit(currentUnit + 1);
+                setStage('prediction');
+                setSelectedOption(null);
+              } else {
+                setStage('complete');
+              }
+            }
+          };
+
+          const handleReset = () => {
+            setCurrentUnit(0);
+            setStage('prediction');
+            setSelectedOption(null);
+            setStrength(learningUnits.map(() => ({ V: 0, trials: 0 })));
+          };
+
+          const sentenceSets = {
+            mentalStateSentences: '心理状态句子',
+            backPainSentences: '背痛相关句子'
+          };
+
+          if (stage === 'complete') {
+            const avgStrength = strength.reduce((acc, s) => acc + s.V, 0) / strength.length;
+            
+            return React.createElement('div', {
+              className: "max-w-4xl mx-auto p-6 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen"
+            }, React.createElement('div', {
+              className: "bg-white rounded-xl shadow-2xl p-8"
+            }, [
+              React.createElement('div', {
+                key: 'header',
+                className: "text-center mb-8"
+              }, [
+                React.createElement(CheckCircle2, {
+                  key: 'icon',
+                  className: "mx-auto text-green-600 mb-4",
+                  size: 64
+                }),
+                React.createElement('h1', {
+                  key: 'title',
+                  className: "text-3xl font-bold text-gray-800 mb-4"
+                }, "完成全部训练！"),
+                React.createElement('div', {
+                  key: 'score',
+                  className: "text-6xl font-bold text-green-600 mb-2"
+                }, avgStrength.toFixed(1) + " / 10"),
+                React.createElement('p', {
+                  key: 'subtitle',
+                  className: "text-gray-600"
+                }, "平均掌握度")
+              ]),
+
+              React.createElement('div', {
+                key: 'progress',
+                className: "bg-blue-50 p-6 rounded-lg mb-6"
+              }, [
+                React.createElement('h3', {
+                  key: 'title',
+                  className: "font-bold text-lg mb-4"
+                }, "📊 各句掌握情况"),
+                React.createElement('div', {
+                  key: 'units',
+                  className: "space-y-3"
+                }, learningUnits.map((unit, idx) =>
+                  React.createElement('div', {
+                    key: idx,
+                    className: "bg-white p-4 rounded-lg"
+                  }, [
+                    React.createElement('div', {
+                      key: 'header',
+                      className: "flex justify-between items-center mb-2"
+                    }, [
+                      React.createElement('span', {
+                        key: 'title',
+                        className: "font-medium"
+                      }, unit.title),
+                      React.createElement('span', {
+                        key: 'score',
+                        className: "text-sm text-gray-600"
+                      }, strength[idx].V.toFixed(1) + " / 10")
+                    ]),
+                    React.createElement('div', {
+                      key: 'bar-container',
+                      className: "w-full bg-gray-200 rounded-full h-2"
+                    }, React.createElement('div', {
+                      className: "bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full",
+                      style: { width: `${(strength[idx].V / 10) * 100}%` }
+                    }))
+                  ])
+                ))
+              ]),
+
+              React.createElement('div', {
+                key: 'review',
+                className: "bg-yellow-50 p-6 rounded-lg mb-6"
+              }, [
+                React.createElement('h3', {
+                  key: 'title',
+                  className: "font-bold text-lg mb-3"
+                }, "🎯 完整段落回顾"),
+                React.createElement('div', {
+                  key: 'sentences',
+                  className: "space-y-3 text-gray-700"
+                }, learningUnits.map((unit, idx) =>
+                  React.createElement('p', {
+                    key: idx,
+                    className: "text-lg leading-relaxed"
+                  }, unit.sentence)
+                ))
+              ]),
+
+              React.createElement('div', {
+                key: 'buttons',
+                className: "flex gap-3"
+              }, [
+                React.createElement('button', {
+                  key: 'reset',
+                  onClick: handleReset,
+                  className: "flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+                }, "重新学习当前集"),
+                React.createElement('button', {
+                  key: 'switch',
+                  onClick: () => {
+                    const otherSet = currentSet === 'mentalStateSentences' ? 'backPainSentences' : 'mentalStateSentences';
+                    setCurrentSet(otherSet);
+                  },
+                  className: "flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition"
+                }, "切换到其他句子集")
+              ])
+            ]));
+          }
+
+          return React.createElement('div', {
+            className: "max-w-4xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen"
+          }, React.createElement('div', {
+            className: "bg-white rounded-xl shadow-2xl p-8"
+          }, [
+            // 顶部标题和进度
+            React.createElement('div', {
+              key: 'header',
+              className: "flex items-center justify-between mb-6"
+            }, [
+              React.createElement('h1', {
+                key: 'title',
+                className: "text-2xl font-bold text-gray-800 flex items-center"
+              }, [
+                React.createElement(BookOpen, {
+                  key: 'icon',
+                  className: "mr-3 text-blue-600",
+                  size: 28
+                }),
+                "🧠 R-W句子理解训练"
+              ]),
+              React.createElement('div', {
+                key: 'progress',
+                className: "text-sm text-gray-600"
+              }, `单元 ${currentUnit + 1} / ${learningUnits.length}`)
+            ]),
+
+            // 句子集选择器
+            React.createElement('div', {
+              key: 'selector',
+              className: "mb-6"
+            }, [
+              React.createElement('label', {
+                key: 'label',
+                className: "block text-sm font-medium text-gray-700 mb-2"
+              }, "选择句子集："),
+              React.createElement('div', {
+                key: 'buttons',
+                className: "flex gap-2"
+              }, Object.entries(sentenceSets).map(([key, label]) =>
+                React.createElement('button', {
+                  key: key,
+                  onClick: () => setCurrentSet(key),
+                  className: `px-4 py-2 rounded-lg transition ${
+                    currentSet === key
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`
+                }, label)
+              ))
+            ]),
+
+            // 掌握度进度条
+            React.createElement('div', {
+              key: 'progress-bar',
+              className: "mb-8"
+            }, [
+              React.createElement('div', {
+                key: 'header',
+                className: "flex items-center justify-between mb-2"
+              }, [
+                React.createElement('span', {
+                  key: 'label',
+                  className: "text-sm font-medium"
+                }, "当前句子掌握度"),
+                React.createElement('span', {
+                  key: 'value',
+                  className: "text-sm text-gray-600"
+                }, `${currentStrength.V.toFixed(1)} / 10 (试验: ${currentStrength.trials})`)
+              ]),
+              React.createElement('div', {
+                key: 'bar-container',
+                className: "w-full bg-gray-200 rounded-full h-3"
+              }, React.createElement('div', {
+                className: "bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all",
+                style: { width: `${(currentStrength.V / 10) * 100}%` }
+              }))
+            ]),
+
+            // 当前句子显示
+            React.createElement('div', {
+              key: 'sentence',
+              className: "bg-gradient-to-r from-indigo-500 to-purple-500 p-6 rounded-lg mb-8 text-white"
+            }, [
+              React.createElement('div', {
+                key: 'title',
+                className: "text-sm opacity-80 mb-2"
+              }, unit.title),
+              React.createElement('div', {
+                key: 'sentence',
+                className: "text-2xl font-bold"
+              }, unit.sentence)
+            ]),
+
+            // 根据当前阶段显示不同内容
+            stage === 'prediction' && React.createElement('div', { key: 'prediction' }, [
+              React.createElement('div', {
+                key: 'question',
+                className: "bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded"
+              }, React.createElement('div', {
+                className: "flex items-start"
+              }, [
+                React.createElement(AlertTriangle, {
+                  key: 'icon',
+                  className: "text-yellow-600 mr-2 mt-1",
+                  size: 20
+                }),
+                React.createElement('div', { key: 'content' }, [
+                  React.createElement('h3', {
+                    key: 'title',
+                    className: "font-bold mb-2"
+                  }, "预测性问题（制造认知冲突）"),
+                  React.createElement('p', {
+                    key: 'question',
+                    className: "text-gray-700"  
+                  }, unit.prediction.question)
+                ])
+              ])),
+
+              React.createElement('div', {
+                key: 'options',
+                className: "space-y-3 mb-6"
+              }, [
+                ...unit.prediction.wrongOptions.map((option, idx) =>
+                  React.createElement('button', {
+                    key: idx,
+                    onClick: () => setSelectedOption(`wrong_${idx}`),
+                    className: `w-full text-left p-4 rounded-lg border-2 transition ${
+                      selectedOption === `wrong_${idx}`
+                        ? 'border-red-500 bg-red-50'
+                        : 'border-gray-300 hover:border-gray-400 bg-white'
+                    }`
+                  }, React.createElement('div', {
+                    className: "flex items-center"
+                  }, [
+                    React.createElement('div', {
+                      key: 'radio',
+                      className: `w-6 h-6 rounded-full border-2 mr-3 flex items-center justify-center ${
+                        selectedOption === `wrong_${idx}`
+                          ? 'border-red-500 bg-red-500'
+                          : 'border-gray-300'
+                      }`
+                    }, selectedOption === `wrong_${idx}` && React.createElement('div', {
+                      className: "w-3 h-3 bg-white rounded-full"
+                    })),
+                    React.createElement('span', {
+                      key: 'text',
+                      className: "text-gray-800"
+                    }, option)
+                  ]))
+                ),
+                React.createElement('button', {
+                  key: 'correct',
+                  onClick: () => setSelectedOption('correct'),
+                  className: `w-full text-left p-4 rounded-lg border-2 transition ${
+                    selectedOption === 'correct'
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-gray-300 hover:border-gray-400 bg-white'
+                  }`
+                }, React.createElement('div', {
+                  className: "flex items-center"
+                }, [
+                  React.createElement('div', {
+                    key: 'radio',
+                    className: `w-6 h-6 rounded-full border-2 mr-3 flex items-center justify-center ${
+                      selectedOption === 'correct'
+                        ? 'border-green-500 bg-green-500'
+                        : 'border-gray-300'
+                    }`
+                  }, selectedOption === 'correct' && React.createElement('div', {
+                    className: "w-3 h-3 bg-white rounded-full"
+                  })),
+                  React.createElement('span', {
+                    key: 'text',
+                    className: "text-gray-800"
+                  }, unit.prediction.correctAnswer)
+                ]))
+              ]),
+
+              React.createElement('button', {
+                key: 'submit',
+                onClick: handlePredictionSubmit,
+                disabled: selectedOption === null,
+                className: "w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+              }, "提交答案")
+            ]),
+
+            stage === 'feedback' && React.createElement('div', { key: 'feedback' }, [
+              React.createElement('div', {
+                key: 'result',
+                className: `p-6 rounded-lg mb-6 ${
+                  selectedOption === 'correct' 
+                    ? 'bg-green-50 border-2 border-green-500' 
+                    : 'bg-red-50 border-2 border-red-500'
+                }`
+              }, [
+                React.createElement('div', {
+                  key: 'header',
+                  className: "flex items-center mb-4"
+                }, [
+                  selectedOption === 'correct' ? 
+                    React.createElement(CheckCircle2, {
+                      key: 'icon',
+                      className: "text-green-600 mr-2",
+                      size: 24
+                    }) :
+                    React.createElement(XCircle, {
+                      key: 'icon',
+                      className: "text-red-600 mr-2",
+                      size: 24
+                    }),
+                  React.createElement('h3', {
+                    key: 'title',
+                    className: "text-xl font-bold"
+                  }, selectedOption === 'correct' ? '正确！理解准确 ✓' : '这是常见误解！')
+                ]),
+
+                React.createElement('div', {
+                  key: 'explanation',
+                  className: "bg-white p-4 rounded-lg mb-4"
+                }, [
+                  React.createElement('h4', {
+                    key: 'title',
+                    className: "font-bold text-sm text-gray-700 mb-2"
+                  }, "💡 解释"),
+                  React.createElement('p', {
+                    key: 'text',
+                    className: "text-gray-700"
+                  }, unit.prediction.explanation)
+                ]),
+
+                React.createElement('div', {
+                  key: 'analysis',
+                  className: "bg-white p-4 rounded-lg"
+                }, [
+                  React.createElement('h4', {
+                    key: 'title',
+                    className: "font-bold text-sm text-gray-700 mb-3"
+                  }, "🧠 R-W学习分析"),
+                  React.createElement('div', {
+                    key: 'metrics',
+                    className: "grid grid-cols-2 gap-3 text-sm"
+                  }, [
+                    React.createElement('div', {
+                      key: 'strength',
+                      className: "bg-blue-50 p-3 rounded"
+                    }, [
+                      React.createElement('div', {
+                        key: 'label',
+                        className: "text-gray-600 text-xs"
+                      }, "当前掌握度"),
+                      React.createElement('div', {
+                        key: 'value',
+                        className: "font-bold text-blue-600"
+                      }, currentStrength.V.toFixed(2))
+                    ]),
+                    React.createElement('div', {
+                      key: 'trials',
+                      className: "bg-purple-50 p-3 rounded"
+                    }, [
+                      React.createElement('div', {
+                        key: 'label',
+                        className: "text-gray-600 text-xs"
+                      }, "试验次数"),
+                      React.createElement('div', {
+                        key: 'value',
+                        className: "font-bold text-purple-600"
+                      }, currentStrength.trials)
+                    ])
+                  ])
+                ])
+              ]),
+
+              React.createElement('button', {
+                key: 'next',
+                onClick: handleNext,
+                className: "w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+              }, "继续：查看语法分析 →")
+            ]),
+
+            stage === 'grammar' && React.createElement('div', { key: 'grammar' }, [
+              React.createElement('div', {
+                key: 'content',
+                className: "bg-indigo-50 p-6 rounded-lg mb-6"
+              }, [
+                React.createElement('h3', {
+                  key: 'title',
+                  className: "font-bold text-lg mb-4 flex items-center"
+                }, [
+                  React.createElement(Brain, {
+                    key: 'icon',
+                    className: "mr-2 text-indigo-600",
+                    size: 24
+                  }),
+                  "语法结构分析"
+                ]),
+
+                React.createElement('div', {
+                  key: 'pattern',
+                  className: "bg-white p-4 rounded-lg mb-4"
+                }, [
+                  React.createElement('div', {
+                    key: 'label',
+                    className: "text-sm text-gray-600 mb-2"
+                  }, "句型模式"),
+                  React.createElement('div', {
+                    key: 'value',
+                    className: "font-mono text-blue-600 font-bold text-sm"
+                  }, unit.grammar.pattern)
+                ]),
+
+                React.createElement('div', {
+                  key: 'breakdown',
+                  className: "space-y-3 mb-4"
+                }, Object.entries(unit.grammar.breakdown).map(([key, value], idx) =>
+                  React.createElement('div', {
+                    key: idx,
+                    className: "bg-white p-4 rounded-lg border-l-4 border-purple-400"
+                  }, [
+                    React.createElement('div', {
+                      key: 'key',
+                      className: "font-mono text-gray-800 font-bold mb-1"
+                    }, key),
+                    React.createElement('div', {
+                      key: 'value',
+                      className: "text-sm text-gray-600"
+                    }, value)
+                  ])
+                )),
+
+                unit.grammar.keyPoint && React.createElement('div', {
+                  key: 'keypoint',
+                  className: "bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400"
+                }, [
+                  React.createElement('h4', {
+                    key: 'title',
+                    className: "font-bold text-sm mb-2"
+                  }, "🔑 关键要点"),
+                  React.createElement('p', {
+                    key: 'text',
+                    className: "text-sm text-gray-700"
+                  }, unit.grammar.keyPoint)
+                ])
+              ]),
+
+              React.createElement('button', {
+                key: 'next',
+                onClick: handleNext,
+                className: "w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition"
+              }, "继续：语义分析 →")
+            ]),
+
+            stage === 'semantic' && React.createElement('div', { key: 'semantic' }, [
+              React.createElement('div', {
+                key: 'content',
+                className: "bg-purple-50 p-6 rounded-lg mb-6"
+              }, [
+                React.createElement('h3', {
+                  key: 'title',
+                  className: "font-bold text-lg mb-4 flex items-center"
+                }, [
+                  React.createElement(Lightbulb, {
+                    key: 'icon',
+                    className: "mr-2 text-purple-600",
+                    size: 24
+                  }),
+                  unit.semanticAnalysis.title
+                ]),
+
+                React.createElement('div', {
+                  key: 'layers',
+                  className: "space-y-3 mb-4"
+                }, unit.semanticAnalysis.layers.map((layer, idx) =>
+                  React.createElement('div', {
+                    key: idx,
+                    className: "bg-white p-4 rounded-lg"
+                  }, [
+                    React.createElement('div', {
+                      key: 'level',
+                      className: "font-bold text-purple-700 mb-2"
+                    }, layer.level),
+                    React.createElement('div', {
+                      key: 'content',
+                      className: "text-gray-700 text-sm"
+                    }, layer.content)
+                  ])
+                ))
+              ]),
+
+              unit.criticalThinking && React.createElement('div', {
+                key: 'critical',
+                className: "bg-orange-50 p-6 rounded-lg mb-6 border-l-4 border-orange-400"
+              }, [
+                React.createElement('h3', {
+                  key: 'question',
+                  className: "font-bold text-lg mb-3"
+                }, unit.criticalThinking.question),
+                React.createElement('ul', {
+                  key: 'points',
+                  className: "space-y-2"
+                }, unit.criticalThinking.points.map((point, idx) =>
+                  React.createElement('li', {
+                    key: idx,
+                    className: "text-sm text-gray-700 flex items-start"
+                  }, [
+                    React.createElement('span', {
+                      key: 'bullet',
+                      className: "mr-2"
+                    }, "•"),
+                    React.createElement('span', {
+                      key: 'text'
+                    }, point)
+                  ])
+                ))
+              ]),
+
+              React.createElement('button', {
+                key: 'next',
+                onClick: handleNext,
+                className: "w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition"
+              }, currentUnit < learningUnits.length - 1 ? '下一个句子 →' : '完成训练 ✓')
+            ]),
+
+            // 学习进度总览
+            React.createElement('div', {
+              key: 'overview',
+              className: "mt-8 p-4 bg-gray-50 rounded-lg"
+            }, [
+              React.createElement('h4', {
+                key: 'title',
+                className: "font-bold text-sm mb-2"
+              }, "学习进度总览"),
+              React.createElement('div', {
+                key: 'grid',
+                className: "grid grid-cols-2 gap-2"
+              }, learningUnits.map((u, idx) =>
+                React.createElement('div', {
+                  key: idx,
+                  className: `p-3 rounded text-center ${
+                    idx === currentUnit
+                      ? 'bg-blue-500 text-white'
+                      : idx < currentUnit
+                      ? 'bg-green-200 text-green-800'
+                      : 'bg-gray-200 text-gray-600'
+                  }`
+                }, [
+                  React.createElement('div', {
+                    key: 'title',
+                    className: "font-bold text-sm"
+                  }, u.title),
+                  React.createElement('div', {
+                    key: 'percentage',
+                    className: "text-xs mt-1"
+                  }, `${(strength[idx]?.V / 10 * 100 || 0).toFixed(0)}%`)
+                ])
+              ))
+            ])
+          ]));
+        };
+
+        ReactDOM.render(React.createElement(UnifiedSentenceLearning), document.getElementById('root'));
+    </script>
+</body>
+</html>
