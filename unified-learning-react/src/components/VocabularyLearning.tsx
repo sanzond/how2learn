@@ -1,6 +1,7 @@
-import React from 'react';
-import { Zap, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Zap, CheckCircle, XCircle, TrendingUp, Volume2, VolumeX } from 'lucide-react';
 import { VocabularyItem, Feedback } from '../types';
+import { vocabularyTrackingManager } from '../utils/localStorage';
 
 interface VocabularyLearningProps {
   vocabularyLearningData: VocabularyItem[];
@@ -30,6 +31,119 @@ const VocabularyLearning: React.FC<VocabularyLearningProps> = ({
   playAudio
 }) => {
   const currentWord = vocabularyLearningData[currentIndex];
+  const [isLoopPlaying, setIsLoopPlaying] = useState(false);
+  const loopIntervalRef = useRef<number | null>(null);
+
+  // 播放单词发音函数
+  const playWordPronunciation = (word: string, isLoopPlay: boolean = false) => {
+    if (!word) return;
+    
+    // 使用有道词典TTS API，美式发音type=2
+    const pronunciationUrl = `https://dict.youdao.com/dictvoice?type=2&audio=${encodeURIComponent(word)}`;
+    
+    // 创建音频对象并播放
+    const audio = new Audio(pronunciationUrl);
+    
+    // 记录播放开始时间
+    const startTime = Date.now();
+    
+    // 播放音频
+    audio.play().catch(error => {
+      console.warn('音频播放失败:', error);
+    });
+    
+    // 监听播放结束，计算播放时间并记录统计
+    audio.addEventListener('ended', () => {
+      const endTime = Date.now();
+      const playTime = (endTime - startTime) / 1000; // 转换为秒
+      
+      // 记录到本地统计
+      vocabularyTrackingManager.recordPlay(word, playTime, isLoopPlay, isLoopPlay ? 1 : 1);
+    });
+  };
+
+  // 切换循环播放功能
+  const toggleLoopPlayback = (word: string) => {
+    if (!word) return;
+
+    if (isLoopPlaying) {
+      // 停止循环播放
+      stopLoopPlayback();
+      setIsLoopPlaying(false);
+    } else {
+      // 开始循环播放
+      startLoopPlayback(word);
+      setIsLoopPlaying(true);
+    }
+  };
+
+  // 开始循环播放
+  const startLoopPlayback = (word: string) => {
+    if (!word) return;
+
+    // 立即播放第一次（标记为循环播放）
+    playWordPronunciation(word, true);
+    
+    // 设置循环播放间隔
+    loopIntervalRef.current = setInterval(() => {
+      playWordPronunciation(word, true);
+    }, 3000); // 每3秒播放一次
+  };
+
+  // 停止循环播放
+  const stopLoopPlayback = () => {
+    if (loopIntervalRef.current) {
+      clearInterval(loopIntervalRef.current);
+      loopIntervalRef.current = null;
+    }
+  };
+
+  // 组件卸载时清理循环播放
+  useEffect(() => {
+    return () => {
+      stopLoopPlayback();
+      setIsLoopPlaying(false);
+    };
+  }, []);
+
+  // 当前单词变化时停止循环播放
+  useEffect(() => {
+    if (isLoopPlaying) {
+      stopLoopPlayback();
+      setIsLoopPlaying(false);
+    }
+  }, [currentIndex]);
+
+  // 播放音效函数
+  const playSoundEffect = (soundName: string) => {
+    const soundUrl = `/sounds/${soundName}.mp3`;
+    const audio = new Audio(soundUrl);
+    audio.play().catch(error => {
+      console.warn(`音效播放失败: ${soundName}`, error);
+    });
+  };
+
+  // 处理输入变化
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    onAnswerChange(value);
+    
+    // 每次按键都播放打字音效
+    playSoundEffect('typing');
+  };
+
+  // 处理提交答案
+  const handleSubmit = () => {
+    onSubmit();
+    playAudio(); // 播放整个句子的mp3
+    
+    // 根据反馈结果播放相应音效
+    if (feedback?.isCorrect) {
+      playSoundEffect('right');
+    } else {
+      playSoundEffect('error');
+    }
+  };
 
   return (
     <div>
@@ -73,6 +187,32 @@ const VocabularyLearning: React.FC<VocabularyLearningProps> = ({
                 <span className="text-xs font-semibold text-gray-500 uppercase">
                   {cue.type}
                 </span>
+                {(cue.type === 'phonetic') && (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => {
+                        playWordPronunciation(currentWord.word, false);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                      title="播放发音"
+                    >
+                      <Volume2 size={12} />
+                      发音
+                    </button>
+                    <button
+                      onClick={() => toggleLoopPlayback(currentWord.word)}
+                      className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
+                        isLoopPlaying 
+                          ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                          : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      }`}
+                      title={isLoopPlaying ? "停止循环播放" : "开始循环播放"}
+                    >
+                      {isLoopPlaying ? <VolumeX size={12} /> : <Volume2 size={12} />}
+                      {isLoopPlaying ? '停止' : '循环'}
+                    </button>
+                  </div>
+                )}
               </div>
               <p className="text-gray-700 text-lg">{cue.text}</p>
             </div>
@@ -89,12 +229,10 @@ const VocabularyLearning: React.FC<VocabularyLearningProps> = ({
           <input
             type="text"
             value={userAnswer}
-            onChange={(e) => onAnswerChange(e.target.value)}
+            onChange={handleInputChange}
             onKeyPress={(e) => {
               if (e.key === 'Enter') {
-                onSubmit();
-                // 回车提交答案后也自动播放整个句子的mp3
-                playAudio();
+                handleSubmit();
               }
             }}
             className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
@@ -102,11 +240,7 @@ const VocabularyLearning: React.FC<VocabularyLearningProps> = ({
             autoFocus
           />
           <button
-            onClick={() => {
-              onSubmit();
-              // 提交答案后自动播放整个句子的mp3
-              playAudio();
-            }}
+            onClick={handleSubmit}
             className="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
           >
             提交答案

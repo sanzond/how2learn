@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- 合集树形视图 -->
+        <record id="view_learning_collection_tree" model="ir.ui.view">
+            <field name="name">learning.collection.tree</field>
+            <field name="model">learning.collection</field>
+            <field name="arch" type="xml">
+                <tree string="合集列表" default_order="sequence,name">
+                    <field name="sequence" widget="handle"/>
+                    <field name="cover_image" widget="image" class="oe_avatar"/>
+                    <field name="name"/>
+                    <field name="category"/>
+                    <field name="content_count"/>
+                    <field name="last_update"/>
+                    <field name="continuous_reading"/>
+                    <field name="collection_link" widget="url"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- 合集表单视图 -->
+        <record id="view_learning_collection_form" model="ir.ui.view">
+            <field name="name">learning.collection.form</field>
+            <field name="model">learning.collection</field>
+            <field name="arch" type="xml">
+                <form string="合集管理">
+                    <sheet>
+                        <group>
+                            <group string="基本信息">
+                                <field name="sequence"/>
+                                <field name="cover_image" widget="image" class="oe_avatar"/>
+                                <field name="name"/>
+                                <field name="description" widget="textarea" placeholder="请输入合集简介（选填）"/>
+                                <field name="category"/>
+                                <field name="continuous_reading"/>
+                                <field name="collection_link" widget="url"/>
+                            </group>
+                            <group string="统计信息">
+                                <field name="content_count" readonly="1"/>
+                                <field name="last_update" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <group string="关联学习集">
+                            <field name="set_ids">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="description"/>
+                                    <field name="user"/>
+                                    <field name="vocabulary_count"/>
+                                    <field name="sentence_count"/>
+                                </tree>
+                                <form>
+                                    <group>
+                                        <group>
+                                            <field name="name"/>
+                                            <field name="description"/>
+                                            <field name="user"/>
+                                        </group>
+                                        <group>
+                                            <field name="vocabulary_count" readonly="1"/>
+                                            <field name="sentence_count" readonly="1"/>
+                                        </group>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- 合集搜索视图 -->
+        <record id="view_learning_collection_search" model="ir.ui.view">
+            <field name="name">learning.collection.search</field>
+            <field name="model">learning.collection</field>
+            <field name="arch" type="xml">
+                <search string="搜索合集">
+                    <field name="name" string="合集名称"/>
+                    <field name="category" string="类别"/>
+                    <filter string="词汇合集" name="category_vocabulary" domain="[('category','=','vocabulary')]"/>
+                    <filter string="句子合集" name="category_sentence" domain="[('category','=','sentence')]"/>
+                    <filter string="语法合集" name="category_grammar" domain="[('category','=','grammar')]"/>
+                    <group string="分组">
+                        <filter string="已开启连续阅读" name="continuous_enabled" domain="[('continuous_reading','=','enabled')]"/>
+                        <filter string="关闭连续阅读" name="continuous_disabled" domain="[('continuous_reading','=','disabled')]"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- 合集动作 -->
+        <record id="action_learning_collection" model="ir.actions.act_window">
+            <field name="name">合集管理</field>
+            <field name="res_model">learning.collection</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'search_default_category_sentence': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    创建新的合集来组织学习内容
+                </p>
+            </field>
+        </record>
+
+        <!-- 菜单项 -->
+        <menuitem id="menu_learning_collection" 
+                  name="合集管理" 
+                  parent="learning_system.menu_learning_config"
+                  action="action_learning_collection"
+                  sequence="30"/>
+    </data>
+</odoo>

@@ -10,3 +10,5 @@ access_learning_set_public,learning.set.public,model_learning_set,base.group_pub
 access_learning_vocabulary_public,learning.vocabulary.public,model_learning_vocabulary,base.group_public,1,0,0,0
 access_learning_sentence_public,learning.sentence.public,model_learning_sentence,base.group_public,1,0,0,0
 access_learning_cue_public,learning.cue.public,model_learning_cue,base.group_public,1,0,0,0
+access_learning_collection_user,learning.collection.user,model_learning_collection,base.group_user,1,1,1,1
+access_learning_collection_public,learning.collection.public,model_learning_collection,base.group_public,1,0,0,0

@@ -1,0 +1,992 @@
+# my-rule
+
+这是一个规则文件，用于帮助 AI 理解您的代码库和遵循项目约定。
+
+## 1. 文件结构和命名约定
+
+### 文件命名
+- 视图文件命名格式：`{model_name}_views.xml`
+- 菜单文件命名格式：`{module_name}_menu_views.xml`
+- 配置文件命名格式：`res_config_settings_views.xml`
+- 资源文件命名格式：`assets.xml`
+
+### 文件结构
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 视图记录按以下顺序组织 -->
+    <!-- 1. 搜索视图 (search) -->
+    <!-- 2. 列表视图 (tree) -->
+    <!-- 3. 表单视图 (form) -->
+    <!-- 4. 看板视图 (kanban) -->
+    <!-- 5. 日历视图 (calendar) -->
+    <!-- 6. 透视表视图 (pivot) -->
+    <!-- 7. 图表视图 (graph) -->
+    <!-- 8. 活动视图 (activity) -->
+    <!-- 9. 动作记录 (ir.actions.act_window) -->
+    <!-- 10. 菜单项 (ir.ui.menu) -->
+</odoo>
+```
+
+## 2. 视图记录约定
+
+### 记录ID命名
+- 表单视图：`{model_name}_view_form` 或 `{model_name}_form`
+- 列表视图：`{model_name}_view_tree` 或 `{model_name}_tree`
+- 搜索视图：`{model_name}_view_search` 或 `{model_name}_search`
+- 看板视图：`{model_name}_view_kanban` 或 `{model_name}_kanban`
+- 日历视图：`{model_name}_view_calendar` 或 `{model_name}_calendar`
+- 透视表：`{model_name}_view_pivot` 或 `{model_name}_pivot`
+- 图表视图：`{model_name}_view_graph` 或 `{model_name}_graph`
+
+### 视图名称
+- 格式：`{model.name}.{view_type}` 或描述性名称
+- 继承视图：`{model.name}.{view_type}.inherit.{module_name}`
+
+## 3. 表单视图结构
+
+### 标准表单布局
+```xml
+<form class="custom_class" js_class="js_controller_class">
+    <header>
+        <!-- 业务按钮 -->
+        <button name="action_confirm" string="Confirm" type="object" 
+                class="btn-primary" data-hotkey="c" 
+                attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+        <button name="action_send" string="Send by Email" type="object" 
+                class="btn-primary" data-hotkey="g" 
+                context="{'validate_analytic': True}"/>
+        
+        <!-- 状态栏 -->
+        <field name="state" widget="statusbar" 
+               statusbar_visible="draft,sent,confirmed,done"/>
+    </header>
+    
+    <!-- 警告横幅 -->
+    <div class="alert alert-warning mb-0" role="alert"
+         attrs="{'invisible': [('warning_message', '=', '')]}">
+        <field name="warning_message"/>
+    </div>
+    
+    <sheet>
+        <!-- 隐藏字段 -->
+        <field name="active" invisible="1"/>
+        <field name="currency_id" invisible="1"/>
+        
+        <!-- 按钮框 -->
+        <div class="oe_button_box" name="button_box">
+            <button name="action_view_related" type="object" 
+                    class="oe_stat_button" icon="fa-pencil-square-o"
+                    attrs="{'invisible': [('related_count', '=', 0)]}">
+                <field name="related_count" widget="statinfo" string="Related"/>
+            </button>
+            
+            <button name="action_preview" type="object"
+                    class="oe_stat_button" icon="fa-globe">
+                <div class="o_field_widget o_stat_info">
+                    <span class="o_stat_text">Customer</span>
+                    <span class="o_stat_text">Preview</span>
+                </div>
+            </button>
+        </div>
+        
+        <!-- Web Ribbon -->
+        <widget name="web_ribbon" title="Archived" bg_color="bg-danger" 
+                attrs="{'invisible': [('active', '=', True)]}"/>
+        
+        <!-- 标题区域 -->
+        <div class="oe_title">
+            <label for="name"/>
+            <h1><field name="name" placeholder="Enter name..." readonly="1"/></h1>
+        </div>
+        
+        <!-- 字段分组 -->
+        <group name="main_group">
+            <group name="left_group">
+                <field name="partner_id" widget="res_partner_many2one"
+                       context="{'res_partner_search_mode': 'customer', 'show_address': 1}"
+                       options='{"always_reload": True}'/>
+                <field name="date_field"/>
+                <field name="user_id"/>
+            </group>
+            <group name="right_group">
+                <field name="amount_total" widget="monetary"/>
+                <field name="state_info" readonly="1"/>
+                <field name="priority" widget="priority"/>
+            </group>
+        </group>
+        
+        <!-- 笔记本页签 -->
+        <notebook>
+            <page string="Main Info" name="main_info">
+                <field name="line_ids" widget="section_and_note_one2many"
+                       mode="tree,kanban"
+                       attrs="{'readonly': [('state', 'in', ('done','cancel'))]}">
+                    <tree string="Lines" editable="bottom">
+                        <field name="sequence" widget="handle"/>
+                        <field name="product_id"/>
+                        <field name="quantity"/>
+                        <field name="price_unit" widget="monetary"/>
+                        <field name="price_subtotal" widget="monetary"/>
+                    </tree>
+                </field>
+            </page>
+            <page string="Other Info" name="other_info" 
+                  attrs="{'invisible': [('show_other_info', '=', False)]}">
+                <group>
+                    <field name="notes" widget="html"/>
+                    <field name="internal_reference"/>
+                </group>
+            </page>
+        </notebook>
+    </sheet>
+    
+    <!-- 消息和关注者 -->
+    <div class="oe_chatter">
+        <field name="message_follower_ids"/>
+        <field name="activity_ids"/>
+        <field name="message_ids"/>
+    </div>
+</form>
+```
+
+### 业务模块特有表单结构
+
+#### 销售订单表单特色
+```xml
+<form class="o_sale_order" js_class="sale_form">
+    <header>
+        <!-- 发票按钮 -->
+        <button name="%(action_view_sale_advance_payment_inv)d" 
+                string="Create Invoice" type="action" 
+                class="btn-primary" data-hotkey="q"
+                attrs="{'invisible': [('invoice_status', '!=', 'to invoice')]}"/>
+        
+        <!-- 确认按钮 -->
+        <button name="action_confirm" string="Confirm" 
+                class="btn-primary" type="object" data-hotkey="v"
+                context="{'validate_analytic': True}"
+                attrs="{'invisible': [('state', 'not in', ['sent'])]}"/>
+    </header>
+    <!-- 其余结构同标准表单 -->
+</form>
+```
+
+## 4. 列表视图约定
+
+### 基本结构
+```xml
+<tree string="Records" 
+      decoration-info="state == 'draft'" 
+      decoration-success="state == 'confirmed'"
+      decoration-warning="state == 'sent'"
+      decoration-danger="state == 'cancelled'"
+      decoration-muted="active == False"
+      multi_edit="1" editable="top" create="true" delete="true">
+    
+    <field name="sequence" widget="handle"/>
+    <field name="name"/>
+    <field name="partner_id"/>
+    <field name="date_field" widget="date"/>
+    <field name="amount_total" sum="Total" widget="monetary"/>
+    <field name="currency_id" invisible="1"/>
+    <field name="state" widget="badge"/>
+    <field name="priority" widget="priority"/>
+    <field name="active" invisible="1"/>
+</tree>
+```
+
+### 装饰器约定
+- `decoration-info`：蓝色高亮（草稿状态）
+- `decoration-success`：绿色高亮（成功状态）
+- `decoration-warning`：橙色高亮（警告状态）
+- `decoration-danger`：红色高亮（错误状态）
+- `decoration-muted`：灰色显示（停用状态）
+
+### 业务特有装饰
+```xml
+<!-- 销售订单特有装饰 -->
+<tree decoration-info="state == 'draft'" 
+      decoration-success="state == 'sale'"
+      decoration-warning="state == 'sent'"
+      decoration-danger="invoice_status == 'to invoice'"
+      decoration-muted="state == 'cancel'">
+</tree>
+```
+
+## 5. 看板视图约定
+
+### 标准看板布局
+```xml
+<kanban class="o_kanban_mobile" sample="1" quick_create="false">
+    <field name="name"/>
+    <field name="partner_id"/>
+    <field name="amount_total"/>
+    <field name="date_field"/>
+    <field name="state"/>
+    <field name="currency_id"/>
+    <field name="activity_state"/>
+    <field name="color"/>
+    
+    <!-- 进度条 -->
+    <progressbar field="activity_state"
+        colors='{"planned": "success", "today": "warning", "overdue": "danger"}'/>
+    
+    <templates>
+        <t t-name="kanban-box">
+            <div t-attf-class="oe_kanban_card oe_kanban_global_click #{kanban_color(record.color.raw_value)}">
+                <div class="o_kanban_record_top mb16">
+                    <div class="o_kanban_record_headings mt4">
+                        <strong class="o_kanban_record_title">
+                            <span t-out="record.partner_id.value"/>
+                        </strong>
+                    </div>
+                    <span class="float-end badge badge-pill">
+                        <field name="amount_total" widget="monetary"/>
+                    </span>
+                </div>
+                <div class="o_kanban_record_body">
+                    <field name="name"/>
+                    <div class="o_kanban_record_subtitle">
+                        <field name="date_field"/>
+                    </div>
+                </div>
+                <div class="o_kanban_record_bottom">
+                    <div class="oe_kanban_bottom_left">
+                        <field name="activity_ids" widget="kanban_activity"/>
+                    </div>
+                    <div class="oe_kanban_bottom_right">
+                        <field name="state" widget="label_selection"
+                               options="{'classes': {'draft': 'secondary', 'sent': 'success'}}"/>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </templates>
+</kanban>
+```
+
+## 6. 搜索视图结构
+
+### 综合搜索视图
+```xml
+<search string="Search Records">
+    <!-- 搜索字段 -->
+    <field name="name" string="Name" filter_domain="[('name','ilike',self)]"/>
+    <field name="partner_id" operator="child_of"/>
+    <field name="user_id"/>
+    <field name="line_ids" string="Product" 
+           filter_domain="[('line_ids.product_id','ilike',self)]"/>
+    
+    <!-- 状态过滤器 -->
+    <filter name="draft" string="Draft" 
+            domain="[('state','=','draft')]"/>
+    <filter name="confirmed" string="Confirmed" 
+            domain="[('state','=','confirmed')]"/>
+    <filter name="done" string="Done" 
+            domain="[('state','=','done')]"/>
+    
+    <!-- 业务过滤器 -->
+    <separator/>
+    <filter name="to_process" string="To Process" 
+            domain="[('invoice_status','=','to_invoice')]"/>
+    <filter name="processed" string="Processed" 
+            domain="[('invoice_status','=','invoiced')]"/>
+    
+    <!-- 日期过滤器 -->
+    <separator/>
+    <filter name="today" string="Today" 
+            domain="[('date_field','>=',datetime.datetime.combine(context_today(),datetime.time(0,0,0)))]"/>
+    <filter name="this_month" string="This Month" 
+            date="date_field" default_period="this_month"/>
+    
+    <!-- 我的记录 -->
+    <separator/>
+    <filter name="my_records" string="My Records" 
+            domain="[('user_id','=',uid)]"/>
+    <filter name="unassigned" string="Unassigned" 
+            domain="[('user_id','=',False)]"/>
+    
+    <!-- 活动过滤器 -->
+    <separator/>
+    <filter name="activities_overdue" string="Late Activities"
+            domain="[('activity_ids.date_deadline', '<', context_today().strftime('%Y-%m-%d'))]"
+            help="Show records that have overdue activities"/>
+    <filter name="activities_today" string="Today Activities"
+            domain="[('activity_ids.date_deadline', '=', context_today().strftime('%Y-%m-%d'))]"/>
+    
+    <!-- 分组 -->
+    <group expand="0" string="Group By">
+        <filter name="group_user" string="Assigned to" 
+                context="{'group_by':'user_id'}"/>
+        <filter name="group_partner" string="Customer" 
+                context="{'group_by':'partner_id'}"/>
+        <filter name="group_state" string="Status" 
+                context="{'group_by':'state'}"/>
+        <filter name="group_date" string="Date" 
+                context="{'group_by':'date_field:month'}"/>
+    </group>
+</search>
+```
+
+## 7. 字段和小部件约定
+
+### 标准小部件
+- `widget="handle"`：拖拽排序
+- `widget="statusbar"`：状态栏
+- `widget="badge"`：徽章显示
+- `widget="priority"`：优先级星级
+- `widget="boolean_toggle"`：开关按钮
+- `widget="monetary"`：货币字段
+- `widget="percentage"`：百分比
+- `widget="many2many_tags"`：标签显示
+- `widget="selection_badge"`：选择字段徽章
+- `widget="ace"`：代码编辑器
+- `widget="html"`：HTML编辑器
+- `widget="image"`：图片字段
+- `widget="kanban_activity"`：看板活动
+
+### 业务特有小部件
+```xml
+<!-- 销售特有 -->
+<field name="order_line" widget="section_and_note_one2many"/>
+<field name="partner_id" widget="res_partner_many2one"
+       context="{'res_partner_search_mode': 'customer'}"/>
+
+<!-- 会计特有 -->
+<field name="account_id" widget="account_tree"/>
+<field name="tax_ids" widget="many2many_tags"/>
+
+<!-- 库存特有 -->
+<field name="location_id" widget="stock_location"/>
+<field name="lot_id" widget="stock_lot"/>
+```
+
+### 字段属性
+- `invisible="1"`：隐藏字段但加载数据
+- `readonly="1"`：只读字段
+- `required="1"`：必填字段
+- `nolabel="1"`：不显示标签
+- `password="True"`：密码字段
+- `placeholder="Enter value"`：占位符文本
+
+## 8. 条件显示约定
+
+### attrs语法（推荐用于复杂条件）
+```xml
+<!-- 单条件 -->
+attrs="{'invisible': [('field_name', '=', 'value')]}"
+attrs="{'readonly': [('state', '!=', 'draft')]}"
+attrs="{'required': [('type', '=', 'customer')]}"
+
+<!-- 多条件AND -->
+attrs="{'invisible': [('field1', '=', 'value1'), ('field2', '!=', 'value2')]}"
+
+<!-- 多条件OR -->
+attrs="{'invisible': ['|', ('field1', '=', 'value1'), ('field2', '=', 'value2')]}"
+
+<!-- 复杂条件 -->
+attrs="{'invisible': ['|', ('active', '=', False), '&', ('state', '=', 'done'), ('user_id', '=', uid)]}"
+
+<!-- 多属性条件 -->
+attrs="{'invisible': [('state', '=', 'draft')], 'readonly': [('confirmed', '=', True)]}"
+```
+
+### Odoo 16+ 简化语法（用于简单条件）
+```xml
+invisible="field_name == 'value'"
+readonly="state != 'draft'"
+required="type == 'customer'"
+```
+
+### 业务条件示例
+```xml
+<!-- 销售业务条件 -->
+attrs="{'invisible': [('invoice_status', '!=', 'to_invoice')]}"
+attrs="{'readonly': [('state', 'in', ('done','cancel'))]}"
+
+<!-- 权限相关条件 -->
+groups="sales_team.group_sale_manager"
+attrs="{'invisible': [('user_has_group', '=', False)]}"
+```
+
+## 9. 按钮约定
+
+### 按钮类型和样式
+```xml
+<!-- 主要操作按钮 -->
+<button name="action_confirm" string="Confirm" type="object" 
+        class="btn-primary" data-hotkey="c"
+        attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+
+<!-- 次要操作按钮 -->
+<button name="action_reset" string="Reset to Draft" type="object" 
+        class="btn-secondary" data-hotkey="r"/>
+
+<!-- 链接样式按钮 -->
+<button name="action_view_details" string="View Details" type="object" 
+        class="oe_link"/>
+
+<!-- 统计按钮 -->
+<button class="oe_stat_button" name="action_view_related"
+        type="object" icon="fa-signal">
+    <div class="o_stat_info">
+        <field name="related_count" class="o_stat_value"/>
+        <span class="o_stat_text">Related</span>
+    </div>
+</button>
+
+<!-- 动作按钮 -->
+<button name="%(action_wizard)d" string="Open Wizard" type="action" 
+        class="btn-primary"/>
+```
+
+### 热键约定
+```xml
+<button data-hotkey="c">Confirm</button>    <!-- c = confirm -->
+<button data-hotkey="v">Validate</button>   <!-- v = validate -->
+<button data-hotkey="s">Save</button>       <!-- s = save -->
+<button data-hotkey="d">Discard</button>    <!-- d = discard -->
+<button data-hotkey="q">Quick</button>      <!-- q = quick -->
+<button data-hotkey="g">Generate</button>   <!-- g = generate -->
+<button data-hotkey="x">Cancel</button>     <!-- x = cancel -->
+```
+
+## 10. 日历和时间视图
+
+### 日历视图
+```xml
+<calendar string="Calendar View" 
+          date_start="date_start" 
+          date_stop="date_end"
+          color="user_id" 
+          hide_time="false" 
+          event_limit="5" 
+          quick_add="true"
+          all_day="all_day_field">
+    <field name="currency_id" invisible="1"/>
+    <field name="partner_id" avatar_field="avatar_128"/>
+    <field name="amount_total" widget="monetary"/>
+    <field name="state" filters="1" invisible="1"/>
+</calendar>
+```
+
+### 活动视图
+```xml
+<activity string="Activities">
+    <templates>
+        <div t-name="activity-box">
+            <div>
+                <field name="name" display="full"/>
+                <field name="partner_id" muted="1" display="full"/>
+            </div>
+        </div>
+    </templates>
+</activity>
+```
+
+## 11. 图表和透视表
+
+### 图表视图
+```xml
+<graph string="Analysis" sample="1" type="bar">
+    <field name="partner_id"/>
+    <field name="amount_total" type="measure"/>
+    <field name="date_field" interval="month"/>
+</graph>
+```
+
+### 透视表视图
+```xml
+<pivot string="Pivot Analysis" sample="1" display_quantity="true">
+    <field name="date_field" type="row" interval="month"/>
+    <field name="partner_id" type="row"/>
+    <field name="user_id" type="col"/>
+    <field name="amount_total" type="measure"/>
+    <field name="quantity" type="measure"/>
+</pivot>
+```
+
+## 12. 动作记录约定
+
+### 标准动作记录
+```xml
+<record id="action_model_name" model="ir.actions.act_window">
+    <field name="name">Display Name</field>
+    <field name="res_model">model.name</field>
+    <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity</field>
+    <field name="domain">[('active', '=', True)]</field>
+    <field name="context">{
+        'default_field': 'value',
+        'search_default_filter': 1,
+        'search_default_group_by': 1
+    }</field>
+    <field name="view_ids" eval="[(5, 0, 0),
+                                  (0, 0, {'view_mode': 'tree', 'view_id': ref('view_tree_id')}),
+                                  (0, 0, {'view_mode': 'form', 'view_id': ref('view_form_id')})]"/>
+    <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">
+            Create your first record
+        </p>
+        <p>
+            Click the create button to start.
+        </p>
+    </field>
+</record>
+```
+
+### 业务特有动作
+```xml
+<!-- 销售订单动作 -->
+<record id="action_orders" model="ir.actions.act_window">
+    <field name="name">Sales Orders</field>
+    <field name="res_model">sale.order</field>
+    <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity</field>
+    <field name="context">{
+        'search_default_my_quotation': 1,
+        'search_default_order_month': 1,
+        'default_state': 'draft'
+    }</field>
+    <field name="domain">[('state', 'not in', ('draft', 'sent'))]</field>
+</record>
+```
+
+## 13. 菜单结构约定
+
+### 标准菜单层级
+```xml
+<menuitem id="main_menu_root" name="Main Menu" 
+          web_icon="module_name,static/description/icon.svg"
+          sequence="30">
+    
+    <!-- 主要功能菜单组 -->
+    <menuitem id="menu_main_operations" name="Operations" sequence="10">
+        <menuitem id="menu_records" 
+                  action="action_records"
+                  groups="base.group_user" sequence="10"/>
+        <menuitem id="menu_reports" name="Reports"
+                  action="action_reports" sequence="20"/>
+    </menuitem>
+    
+    <!-- 配置菜单组 -->
+    <menuitem id="menu_configuration" name="Configuration"
+              groups="base.group_system" sequence="90">
+        <menuitem id="menu_settings" 
+                  action="action_settings" sequence="10"/>
+    </menuitem>
+</menuitem>
+```
+
+### 业务模块菜单示例
+```xml
+<!-- 销售菜单 -->
+<menuitem id="sale_menu_root" name="Sales" 
+          web_icon="sale_management,static/description/icon.svg"
+          sequence="30">
+    <menuitem id="sale_order_menu" name="Orders" sequence="10">
+        <menuitem id="menu_sale_quotations" 
+                  action="action_quotations_with_onboarding"
+                  groups="sales_team.group_sale_salesman" sequence="10"/>
+        <menuitem id="menu_sale_order" name="Orders"
+                  action="action_orders"
+                  groups="sales_team.group_sale_salesman" sequence="20"/>
+    </menuitem>
+</menuitem>
+```
+
+## 14. 继承视图约定
+
+### XPath继承表达式
+```xml
+<record id="view_inherit_id" model="ir.ui.view">
+    <field name="name">Inherit View Name</field>
+    <field name="model">model.name</field>
+    <field name="inherit_id" ref="module.original_view_id"/>
+    <field name="arch" type="xml">
+        <!-- 在字段后添加 -->
+        <field name="existing_field" position="after">
+            <field name="new_field"/>
+        </field>
+        
+        <!-- 在组内添加 -->
+        <group name="existing_group" position="inside">
+            <field name="new_field"/>
+        </group>
+        
+        <!-- 替换字段 -->
+        <field name="existing_field" position="replace">
+            <field name="existing_field" widget="new_widget"/>
+        </field>
+        
+        <!-- 修改属性 -->
+        <field name="existing_field" position="attributes">
+            <attribute name="invisible">1</attribute>
+            <attribute name="required">0</attribute>
+        </field>
+        
+        <!-- 使用XPath表达式 -->
+        <xpath expr="//field[@name='field_name']" position="after">
+            <field name="new_field"/>
+        </xpath>
+        
+        <!-- 复杂XPath -->
+        <xpath expr="//notebook/page[@name='page_name']" position="inside">
+            <group string="New Group">
+                <field name="new_field"/>
+            </group>
+        </xpath>
+    </field>
+</record>
+```
+
+## 15. 配置设置视图
+
+### 设置页面结构
+```xml
+<div class="app_settings_block o_not_app"
+     string="Module Settings" data-string="Module Settings" 
+     data-key="module_name"
+     groups="base.group_system">
+    
+    <h2>Main Configuration</h2>
+    <div class="row mt16 o_settings_container" name="main_setting_container">
+        <div class="col-12 col-lg-6 o_setting_box" id="feature_option">
+            <div class="o_setting_left_pane">
+                <field name="enable_feature"/>
+            </div>
+            <div class="o_setting_right_pane">
+                <label for="enable_feature"/>
+                <a href="https://www.odoo.com/documentation/16.0/..." 
+                   title="Documentation" class="o_doc_link" target="_blank"/>
+                <div class="text-muted">
+                    Enable advanced features for better functionality
+                </div>
+                <div class="content-group" 
+                     attrs="{'invisible': [('enable_feature','=',False)]}">
+                    <div class="mt8">
+                        <button name="%(action_configuration)d" 
+                                icon="fa-arrow-right" type="action" 
+                                string="Configure" class="btn-link"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+## 16. 响应式设计约定
+
+### Bootstrap类使用
+```xml
+<!-- 响应式列布局 -->
+<div class="row">
+    <div class="col-lg-6 col-md-12">
+        <field name="field1"/>
+    </div>
+    <div class="col-lg-6 col-md-12">
+        <field name="field2"/>
+    </div>
+</div>
+
+<!-- 设置页面响应式 -->
+<div class="o_setting_box">
+    <div class="o_setting_left_pane">
+        <field name="boolean_field"/>
+    </div>
+    <div class="o_setting_right_pane">
+        <label for="boolean_field"/>
+        <div class="text-muted">Description</div>
+    </div>
+</div>
+```
+
+## 17. 权限和安全约定
+
+### 组权限
+```xml
+<!-- 视图级权限 -->
+<record id="view_id" model="ir.ui.view" groups="base.group_user"/>
+
+<!-- 字段级权限 -->
+<field name="sensitive_field" groups="base.group_system"/>
+
+<!-- 按钮权限 -->
+<button name="action_admin" groups="base.group_system"/>
+
+<!-- 菜单权限 -->
+<menuitem groups="sales_team.group_sale_manager"/>
+```
+
+### 常用权限组
+- `base.group_user`：内部用户
+- `base.group_system`：系统管理员
+- `base.group_portal`：门户用户
+- `base.group_public`：公共用户
+- `sales_team.group_sale_salesman`：销售员
+- `sales_team.group_sale_manager`：销售经理
+- `account.group_account_manager`：会计经理
+
+## 18. 上下文约定
+
+### 常用上下文变量
+```xml
+<!-- 默认值设置 -->
+context="{'default_field': 'value', 'default_state': 'draft'}"
+
+<!-- 搜索默认过滤器 -->
+context="{'search_default_filter_name': 1, 'search_default_group_by': 1}"
+
+<!-- 业务上下文 -->
+context="{'res_partner_search_mode': 'customer', 'show_address': 1, 'show_vat': True}"
+context="{'partner_id': partner_id, 'quantity': quantity, 'pricelist': pricelist_id}"
+
+<!-- 验证上下文 -->
+context="{'validate_analytic': True, 'check_permissions': True}"
+
+<!-- 视图模式限制 -->
+context="{'form_view_ref': 'module.view_form_id', 'tree_view_ref': 'module.view_tree_id'}"
+```
+
+## 19. CSS类和样式约定
+
+### 表单样式类
+- `o_sale_order`：销售订单表单
+- `o_account_move`：会计凭证表单
+- `o_kanban_mobile`：移动端看板
+- `o_stat_info`：统计信息
+- `o_setting_box`：设置项容器
+- `app_settings_block`：应用设置块
+
+### 状态样式类
+- `badge-pill`：药丸形状徽章
+- `text-muted`：静音文本
+- `btn-link`：链接按钮
+- `oe_highlight`：高亮按钮
+- `oe_stat_button`：统计按钮
+
+### 布局样式类
+- `oe_button_box`：按钮容器
+- `oe_title`：标题区域
+- `oe_chatter`：消息区域
+- `o_kanban_record_top`：看板记录顶部
+- `o_kanban_record_bottom`：看板记录底部
+
+## 20. 性能优化约定
+
+### 字段加载优化
+```xml
+<!-- 将不常用字段放在单独页签 -->
+<notebook>
+    <page string="Main" name="main">
+        <!-- 常用字段 -->
+    </page>
+    <page string="Advanced" name="advanced">
+        <!-- 不常用字段 -->
+    </page>
+</notebook>
+
+<!-- 预加载需要的字段 -->
+<field name="computed_field" invisible="1"/>
+
+<!-- 避免在列表视图加载过多字段 -->
+<tree>
+    <field name="name"/>
+    <field name="date"/>
+    <!-- 避免加载大文本字段 -->
+</tree>
+```
+
+### 域过滤优化
+```xml
+<!-- 使用索引字段过滤 -->
+domain="[('state', '=', 'draft')]"
+
+<!-- 避免复杂计算字段过滤 -->
+<!-- 不推荐: domain="[('computed_total', '>', 1000)]" -->
+<!-- 推荐: 在模型中创建存储字段 -->
+
+<!-- 合理使用limit -->
+<field name="line_ids" options="{'limit': 10}"/>
+```
+
+## 21. 国际化和本地化
+
+### 字符串翻译
+```xml
+<!-- 所有用户可见字符串都应可翻译 -->
+<button string="Create Invoice"/>  <!-- 好 -->
+<button string="Cr. Inv."/>        <!-- 不好，避免缩写 -->
+
+<!-- 使用描述性标题 -->
+<field name="amount" string="Total Amount"/>
+<page string="Order Lines" name="order_lines"/>
+```
+
+### 日期和数字格式
+```xml
+<!-- 日期字段 -->
+<field name="date_order" widget="date"/>
+<field name="datetime_field" widget="datetime"/>
+
+<!-- 货币字段 -->
+<field name="amount_total" widget="monetary"/>
+<field name="currency_id" invisible="1"/>
+
+<!-- 数字字段 -->
+<field name="percentage" widget="percentage"/>
+<field name="float_field" digits="(16, 2)"/>
+```
+
+## 22. 调试和测试约定
+
+### 开发模式功能
+- 激活开发者模式查看视图架构
+- 使用字段调试信息检查属性
+- 利用网络选项监控AJAX请求
+- 使用视图继承图谱分析继承关系
+
+### 测试最佳实践
+```xml
+<!-- 添加sample数据用于测试 -->
+<kanban sample="1">
+<graph sample="1">
+<pivot sample="1">
+
+<!-- 测试不同权限组的访问 -->
+<field groups="base.group_system"/>
+<button groups="sales_team.group_sale_manager"/>
+
+<!-- 验证条件显示逻辑 -->
+attrs="{'invisible': [('test_condition', '=', True)]}"
+
+<!-- 检查移动端响应式 -->
+<kanban class="o_kanban_mobile">
+```
+
+## 23. 模块特定最佳实践
+
+### 销售模块
+- 使用 `section_and_note_one2many` 支持章节和备注
+- 合作伙伴字段使用 `res_partner_search_mode: customer`
+- 订单确认使用 `validate_analytic` 上下文
+- 发票状态使用专门的装饰器显示
+
+### 会计模块
+- 使用 `account_tree` 小部件选择科目
+- 货币字段必须配合 `currency_id`
+- 分录行使用 `account_move_line_tree` 视图
+
+### 库存模块
+- 位置字段使用 `stock_location` 小部件
+- 批次字段使用 `stock_lot` 小部件
+- 数量字段考虑计量单位转换
+
+### 项目模块
+- 任务视图使用 `project_task` 特定样式
+- 甘特图使用 `date_start` 和 `date_end`
+- 里程碑使用特殊的看板视图
+
+wechat_data.xml
+odoo.tools.convert.ParseError: while parsing file:/e:/meetmealproject/backend/odoo-16.0/extaddons/jxc/wechat_message_logger/data/wechat_data.xml:107
+forbidden opcode(s) in "# 清理30天前的消息（可根据需要调整）\nfrom datetime import datetime, timedelta\n\ncutoff_date = datetime.now() - timedelta(days=30)\nold_messages = model.search([('create_date', '<', cutoff_date)])\n\n# 只删除非重要的消息\nnon_important = old_messages.filtered(lambda m: not m.tag_ids.filtered(lambda t: t.name == 'Important'))\nif non_important:\n non_important.unlink()\n log('Cleaned up %d old messages' % len(non_important))": IMPORT_NAME, IMPORT_FROM
+
+View error context:
+'-no context-'
+
+恢复
+CodeBuddy
+检测到Odoo安全限制错误。Odoo的安全机制禁止在数据文件的Python代码中使用import语句。我需要修复这个问题，移除import语句并使用Odoo提供的内置方法。
+
+分析
+
+wechat_data.xmlL100-129
+cutoff_date = fields.Datetime.now() - timedelta(days=30)
+old_messages = model.search([('create_date', '&lt;', cutoff_date)])
+
+# 只删除非重要的消息
+non_
+我看到问题了。Odoo的安全机制禁止在定时任务中使用import语句。我需要完全重写这个定时任务，移除所有import语句并使用Odoo内置的方法。
+
+cutoff_date = fields.Datetime.now() - fields.timedelta(days=30)
+old_messages = model.search([('create_date', '&lt;', cutoff_date)])
+
+# 只删除非重要的消息
+non_important = old_messages.filtered(lambda m: not m.tag_ids.filtere
+我看到问题了。让我直接重写整个定时任务记录，完全移除import语句并使用Odoo安全的方法：
+
+
+if non_important:
+    count = len(non_important)
+    non_important.unlink()
+    log('Cleaned up %d old messages' % count)
+我需要重新创建这个文件，完全移除有问题的import语句。让我重写整个文件：
+
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+    </record>
+
+</odoo>
+✅ Odoo安全限制问题已修复！
+
+🔧 问题分析和解决
+原始问题
+odoo.tools.convert.ParseError: forbidden opcode(s) in "...": IMPORT_NAME, IMPORT_FROM
+这个错误是因为Odoo的安全机制禁止在数据文件的Python代码中使用import语句，特别是在定时任务（ir.cron）的代码字段中。
+
+❌ 有问题的代码
+from datetime import datetime, timedelta
+cutoff_date = datetime.now() - timedelta(days=30)
+✅ 修复后的代码
+# 使用Odoo内置方法，无需import
+today = fields.Date.today()
+cutoff_date = today - relativedelta(days=30)
+🚀 修复内容
+1. 移除了所有import语句
+❌ from datetime import datetime, timedelta
+✅ 使用Odoo内置的fields和relativedelta
+2. 使用Odoo安全的方法
+✅ fields.Date.today() - 获取当前日期
+✅ relativedelta(days=30) - 日期计算
+✅ 保持了XML转义字符 &lt; 的正确使用
+3. 保持了完整功能
+✅ 清理30天前的旧消息
+✅ 只删除非"Important"标签的消息
+✅ 记录清理日志
+✅ 联系人统计更新任务
+📋 定时任务配置
+清理旧消息任务
+名称: WeChat: Cleanup Old Messages
+频率: 每天执行一次
+状态: 默认关闭（active=False）
+功能: 清理30天前的非重要消息
+更新联系人统计任务
+名称: WeChat: Update Contact Statistics
+频率: 每小时执行一次
+状态: 默认开启（active=True）
+功能: 更新联系人的消息数量统计
+🔒 Odoo安全规则总结
+禁止的操作
+❌ import 语句
+❌ from ... import ... 语句
+❌ 访问文件系统的操作
+❌ 网络请求相关操作
+允许的操作
+✅ 使用env访问其他模型
+✅ 使用model访问当前模型
+✅ 使用fields模块的方法
+✅ 使用relativedelta进行日期计算
+✅ 基本的Python语法和内置函数
+现在XML文件应该可以正常加载，不会再出现ParseError错误！您可以重新安装或升级模块了。
+
+
+
+my-rule.mdc
+## 24. XML转义字符规则
+
+Python比较操作符的XML转义对照表
+基本比较操作符转义
+<   →   &lt;
+>   →   &gt;  
+<=  →   &lt;=
+>=  →   &gt;=

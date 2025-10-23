@@ -579,7 +579,8 @@ class AIGenerator(models.TransientModel):
 {
   "[学习集名称]": {
     "fullText": "[完整的输入文本]",
-    "description": "[中文句子概述不超过10字]",    
+    "description": "[中文句子概述不超过10字]",
+    "chineseTranslation": "[中文翻译]",
     "vocabulary": [
       {
         "word": "[词汇单词]",
@@ -589,7 +590,7 @@ class AIGenerator(models.TransientModel):
           { "type": "[线索类型]", "text": "[反义词或同义词]", "strength": 0 },
           { "type": "[image]", "text": "[词汇单词emoji]", "strength": 0 }
         ],
-        "translation": "[中文翻译]",
+        "translation": "[中文翻译] 一句话拆解词汇单词前缀词根后缀",
         "example": "[英文例句]",
         "commonMistake": "[常见错误说明]",
         "lambda": 10

@@ -27,6 +27,7 @@
         'views/ai_config_views.xml',
         'views/ai_generator_views.xml',
         'views/ai_call_statistics_views.xml',
+        'views/collection_views.xml',
         'views/menu_views.xml',
         'data/demo_data.xml',
         'data/ai_config_data.xml',

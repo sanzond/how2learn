@@ -14,23 +14,25 @@ class LearningSet(models.Model):
     name = fields.Char('Name', required=True, help="Internal name for the learning set", tracking=True)
     description = fields.Char('Description', required=True, help="Display name for users", tracking=True)
     full_text = fields.Text('Full Text', required=True, help="Complete text content for learning", tracking=True)
+    chinese_translation = fields.Text('Chinese Translation', help="Chinese translation of the full text", tracking=True)
     user = fields.Char('User', default='public', help="Target user or user group")
     sequence = fields.Integer('Sequence', default=10, help="Display order")
     active = fields.Boolean('Active', default=True, tracking=True)
-    
+
     # MP3 Audio file
     audio_file = fields.Binary('Audio File (MP3)', help="Upload MP3 audio file for this learning set")
     audio_filename = fields.Char('Audio Filename', help="Name of the uploaded audio file")
     audio_url = fields.Char('Audio URL', compute='_compute_audio_url', help="URL to access the audio file")
-    
+
     # Related fields
     vocabulary_ids = fields.One2many('learning.vocabulary', 'learning_set_id', string='Vocabulary')
     sentence_ids = fields.One2many('learning.sentence', 'learning_set_id', string='Sentences')
-    
+
     # Computed fields
     vocabulary_count = fields.Integer('Vocabulary Count', compute='_compute_counts', store=True)
     sentence_count = fields.Integer('Sentence Count', compute='_compute_counts', store=True)
-
+    collection_id = fields.Many2one('learning.collection', string='所属合集', ondelete='set null')
+    
     @api.depends('vocabulary_ids', 'sentence_ids')
     def _compute_counts(self):
         for record in self:
@@ -70,7 +72,7 @@ class LearningSet(models.Model):
                         'text': cue.text,
                         'strength': cue.strength
                     })
-                
+
                 vocabulary_data.append({
                     'word': vocab.word,
                     'cues': cues_data,
@@ -79,7 +81,7 @@ class LearningSet(models.Model):
                     'commonMistake': vocab.common_mistake,
                     'lambda': vocab.lambda_value
                 })
-            
+
             # Export sentences
             sentences_data = []
             for sentence in learning_set.sentence_ids:
@@ -89,19 +91,19 @@ class LearningSet(models.Model):
                     'correctAnswer': sentence.correct_answer,
                     'explanation': sentence.explanation
                 }
-                
+
                 grammar_breakdown = {}
                 if sentence.grammar_breakdown:
                     try:
                         grammar_breakdown = json.loads(sentence.grammar_breakdown)
                     except:
                         grammar_breakdown = {}
-                
+
                 grammar_data = {
                     'pattern': sentence.grammar_pattern,
                     'breakdown': grammar_breakdown
                 }
-                
+
                 sentences_data.append({
                     'id': sentence.sentence_id,
                     'title': sentence.title,
@@ -110,7 +112,7 @@ class LearningSet(models.Model):
                     'grammar': grammar_data,
                     'lambda': sentence.lambda_value
                 })
-            
+
             # Combine all data
             result[learning_set.name] = {
                 'fullText': learning_set.full_text,
@@ -121,7 +123,7 @@ class LearningSet(models.Model):
                 'vocabulary': vocabulary_data,
                 'sentences': sentences_data
             }
-        
+
         return result
 
     @api.model
@@ -138,15 +140,15 @@ class LearningSet(models.Model):
                 data = json.loads(json_data)
             else:
                 data = json_data
-            
+
             created_sets = []
-            
+
             for set_name, set_data in data.items():
                 # Check if learning set already exists
                 existing_set = self.search([('name', '=', set_name)], limit=1)
                 if existing_set:
                     raise UserError(f"学习集 '{set_name}' 已存在。请先删除现有数据或使用不同的名称。")
-                
+
                 # Create learning set
                 learning_set = self.create({
                     'name': set_name,
@@ -154,7 +156,7 @@ class LearningSet(models.Model):
                     'full_text': set_data.get('fullText', ''),
                     'user': set_data.get('user', 'public'),
                 })
-                
+
                 # Import vocabulary
                 vocabulary_data = set_data.get('vocabulary', [])
                 for vocab_item in vocabulary_data:
@@ -166,7 +168,7 @@ class LearningSet(models.Model):
                         'common_mistake': vocab_item.get('commonMistake', ''),
                         'lambda_value': vocab_item.get('lambda', 0.1),
                     })
-                    
+
                     # Import cues for vocabulary
                     cues_data = vocab_item.get('cues', [])
                     for cue_item in cues_data:
@@ -176,21 +178,22 @@ class LearningSet(models.Model):
                             'text': cue_item.get('text', ''),
                             'strength': cue_item.get('strength', 1.0),
                         })
-                
+
                 # Import sentences
                 sentences_data = set_data.get('sentences', [])
                 for sentence_item in sentences_data:
                     prediction = sentence_item.get('prediction', {})
                     grammar = sentence_item.get('grammar', {})
-                    
+
                     # Prepare wrong options
                     wrong_options = prediction.get('wrongOptions', [])
                     wrong_options_text = '\n'.join(wrong_options) if wrong_options else ''
-                    
+
                     # Prepare grammar breakdown
                     grammar_breakdown = grammar.get('breakdown', {})
-                    grammar_breakdown_json = json.dumps(grammar_breakdown, ensure_ascii=False) if grammar_breakdown else ''
-                    
+                    grammar_breakdown_json = json.dumps(grammar_breakdown,
+                                                        ensure_ascii=False) if grammar_breakdown else ''
+
                     self.env['learning.sentence'].create({
                         'learning_set_id': learning_set.id,
                         'sentence_id': sentence_item.get('id', ''),
@@ -204,15 +207,15 @@ class LearningSet(models.Model):
                         'grammar_breakdown': grammar_breakdown_json,
                         'lambda_value': sentence_item.get('lambda', 0.1),
                     })
-                
+
                 created_sets.append(learning_set)
-            
+
             return {
                 'success': True,
                 'message': f'成功导入 {len(created_sets)} 个学习集',
                 'created_sets': [s.name for s in created_sets]
             }
-            
+
         except json.JSONDecodeError as e:
             raise UserError(f"JSON 格式错误: {str(e)}")
         except Exception as e:
@@ -263,7 +266,7 @@ class LearningSet(models.Model):
         """Open AI data generation wizard"""
         if not self.full_text:
             raise UserError("请先填写完整文本内容(Full Text)才能使用AI生成功能")
-        
+
         return {
             'name': 'AI 生成学习数据',
             'type': 'ir.actions.act_window',
@@ -282,62 +285,106 @@ class LearningSet(models.Model):
             'target': 'new',
         }
 
+    def _convert_symbols_to_words(self, text):
+        """Convert symbols to words for better TTS recognition
+        将 & 转换为 and，@ 转换为 at 等
+        清除其他非标准符号（如中文、特殊符号等）
+        保留英文、数字、空格和基本标点符号
+        清理多余空格
+        """
+        symbol_mapping = {
+            '&': 'and',
+            '@': 'at',
+            '#': 'number',
+            '%': 'percent',
+            '+': 'plus',
+            '=': 'equals',
+            '<': 'less than',
+            '>': 'greater than',
+            '|': 'or',
+            '~': 'approximately',
+            '^': 'caret',
+            '`': 'backtick',
+            '\\': 'backslash',
+            '/': 'slash'
+        }
+
+        # Replace symbols with words
+        converted_text = text
+        for symbol, word in symbol_mapping.items():
+            converted_text = converted_text.replace(symbol, f' {word} ')
+
+        # Remove non-English alphabet characters and symbols
+        import re
+        # Keep only English letters, numbers, spaces, and basic punctuation
+        converted_text = re.sub(r'[^a-zA-Z0-9\s\.\,\!\?\;\:\'\"\-\(\)]', ' ', converted_text)
+
+        # Clean up extra spaces
+        converted_text = re.sub(r'\s+', ' ', converted_text).strip()
+
+        return converted_text
+
     def generate_txt2audio(self):
         """Generate audio using txt2audio API (internal method)"""
         if not self.full_text:
             raise UserError("请先填写完整文本内容(Full Text)才能使用语音生成功能")
-        
+
         import logging
         _logger = logging.getLogger(__name__)
-        
+
         try:
             _logger.info(f"开始为学习集 '{self.name}' 生成音频...")
-            
+
+            # Convert symbols to words for better TTS recognition
+            processed_text = self._convert_symbols_to_words(self.full_text)
+            _logger.info(f"原始文本: {self.full_text}")
+            _logger.info(f"处理后文本: {processed_text}")
+
             # Prepare API request
             url = "https://text2audio.cc/api/audio"
             headers = {"Content-Type": "application/json"}
             data = {
                 "language": "en-US",
-                "paragraphs": self.full_text,
+                "paragraphs": processed_text,
                 "splitParagraph": True
             }
-            
+
             _logger.info(f"发送API请求到: {url}")
-            
+
             # Make API request
             response = requests.post(url, json=data, headers=headers, timeout=30)
             response.raise_for_status()
-            
+
             # Parse response
             audio_data = response.json()
             if not audio_data or not isinstance(audio_data, list) or not audio_data[0].get('url'):
                 raise UserError("API返回数据格式错误")
-            
+
             # Get the first audio URL
             audio_url = audio_data[0]['url']
             _logger.info(f"获取到音频URL: {audio_url}")
-            
+
             # Download the MP3 file
             _logger.info("开始下载音频文件...")
             audio_response = requests.get(audio_url, timeout=60)
             audio_response.raise_for_status()
-            
+
             # Encode audio content to base64
             audio_content = base64.b64encode(audio_response.content)
-            
+
             # Generate filename
             filename = f"{self.name}.mp3"
-            
+
             # Update the record
             self.write({
                 'audio_file': audio_content,
                 'audio_filename': filename
             })
-            
+
             _logger.info(f"音频文件生成成功: {filename}, 大小: {len(audio_response.content)} 字节")
-            
+
             return True
-            
+
         except requests.exceptions.RequestException as e:
             _logger.error(f"API请求失败: {str(e)}")
             raise UserError(f"API请求失败: {str(e)}")
@@ -350,7 +397,7 @@ class LearningSet(models.Model):
         try:
             # 调用内部生成方法
             self.generate_txt2audio()
-            
+
             # 返回UI动作
             return {
                 'type': 'ir.actions.act_window',
@@ -370,7 +417,7 @@ class LearningSet(models.Model):
                     }
                 }
             }
-            
+
         except Exception as e:
             # 如果是UserError，直接抛出
             if isinstance(e, UserError):

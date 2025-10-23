@@ -1,16 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, BookOpen, ArrowLeft, Play } from 'lucide-react';
+import { CheckCircle, BookOpen, ArrowLeft, Play, User, BarChart3, Share } from 'lucide-react';
 import { LearningData, VocabularyItem, SentenceItem, Feedback } from './types';
 import VocabularyLearning from './components/VocabularyLearning';
 import SentenceLearning from './components/SentenceLearning';
 import LearningSetSelector from './components/LearningSetSelector';
+import LoginModal from './components/LoginModal';
+import RegisterModal from './components/RegisterModal';
+import ForgotPasswordModal from './components/ForgotPasswordModal';
+import FullSentenceDisplay from './components/FullSentenceDisplay';
+import SentenceStatistics from './components/SentenceStatistics';
 import { config } from './config';
+import { sentenceTrackingManager } from './utils/localStorage';
 
 const App: React.FC = () => {
   const [learningData, setLearningData] = useState<LearningData | null>(null);
   const [learningMode, setLearningMode] = useState<'vocabulary' | 'sentence'>('vocabulary');
   const [currentSet, setCurrentSet] = useState<keyof LearningData | null>(null);
   const [showSelector, setShowSelector] = useState(true);
+  
+  // 登录模态窗口状态
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  
+  // 注册模态窗口状态
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  
+  // 找回密码模态窗口状态
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  
+  // 句子统计模态窗口状态
+  const [showStatisticsModal, setShowStatisticsModal] = useState(false);
+  
+  // 分享模态窗口状态
+  const [showShareModal, setShowShareModal] = useState(false);
+  
   
   // 词汇学习状态
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -120,11 +142,137 @@ const App: React.FC = () => {
     setCurrentSet(null);
   };
 
+  // 登录事件处理函数
+  const handleLogin = () => {
+    console.log('登录按钮被点击 - 打开登录窗口');
+    setShowLoginModal(true);
+  };
+
+  // 关闭登录模态窗口
+  const handleCloseLoginModal = () => {
+    setShowLoginModal(false);
+  };
+
+  // 切换到注册模态窗口
+  const handleSwitchToRegister = () => {
+    setShowLoginModal(false);
+    setShowRegisterModal(true);
+  };
+
+  // 关闭注册模态窗口
+  const handleCloseRegisterModal = () => {
+    setShowRegisterModal(false);
+  };
+
+  // 从注册切换到登录
+  const handleSwitchToLogin = () => {
+    setShowRegisterModal(false);
+    setShowLoginModal(true);
+  };
+
+  // 切换到找回密码模态窗口
+  const handleSwitchToForgotPassword = () => {
+    setShowLoginModal(false);
+    setShowForgotPasswordModal(true);
+  };
+
+  // 关闭找回密码模态窗口
+  const handleCloseForgotPasswordModal = () => {
+    setShowForgotPasswordModal(false);
+  };
+
+  // 从找回密码切换到登录
+  const handleSwitchFromForgotPasswordToLogin = () => {
+    setShowForgotPasswordModal(false);
+    setShowLoginModal(true);
+  };
+
+  // 打开句子统计模态窗口
+  const handleShowStatistics = () => {
+    setShowStatisticsModal(true);
+  };
+
+  // 关闭句子统计模态窗口
+  const handleCloseStatisticsModal = () => {
+    setShowStatisticsModal(false);
+  };
+
+  // 打开分享模态窗口
+  const handleShowShare = () => {
+    setShowShareModal(true);
+  };
+
+  // 关闭分享模态窗口
+  const handleCloseShareModal = () => {
+    setShowShareModal(false);
+  };
+
+  // 生成分享链接
+  const generateShareLink = () => {
+    if (!currentSet || !learningData || !learningData[currentSet]) {
+      return '';
+    }
+    
+    const currentUrl = new URL(window.location.href);
+    // 清除现有参数
+    currentUrl.search = '';
+    
+    // 添加分享参数
+    currentUrl.searchParams.set('share', 'true');
+    currentUrl.searchParams.set('set', currentSet);
+    currentUrl.searchParams.set('mode', learningMode);
+    
+    return currentUrl.toString();
+  };
+
+  // 复制分享链接到剪贴板
+  const copyShareLink = async () => {
+    const shareLink = generateShareLink();
+    if (!shareLink) return;
+    
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      alert('分享链接已复制到剪贴板！');
+    } catch (error) {
+      console.error('复制失败:', error);
+      // 降级方案：使用临时textarea
+      const textArea = document.createElement('textarea');
+      textArea.value = shareLink;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('分享链接已复制到剪贴板！');
+    }
+  };
+
+  // 处理URL参数，实现直接跳转
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shareSet = urlParams.get('set');
+    const shareMode = urlParams.get('mode');
+    
+    if (shareSet && learningData && learningData[shareSet as keyof LearningData]) {
+      // 直接跳转到指定学习集
+      setCurrentSet(shareSet as keyof LearningData);
+      setShowSelector(false);
+      
+      if (shareMode === 'vocabulary' || shareMode === 'sentence') {
+        setLearningMode(shareMode);
+      }
+      
+      // 清除URL参数，避免刷新后重复跳转
+      const newUrl = new URL(window.location.href);
+      newUrl.search = '';
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [learningData]);
+
   // 播放音频函数 - 播放完整句子
-const playAudio = async () => {
+const playAudio = async (): Promise<void> => {
   if (!learningData || !currentSet || !learningData[currentSet].audioUrl) {
     console.warn('音频URL不存在');
-    return;
+    throw new Error('音频URL不存在');
   }
 
   try {
@@ -161,12 +309,20 @@ const playAudio = async () => {
       testAudioAccess();
     });
     
-    await audio.play();
-    console.log('音频播放成功');
+    // 返回播放Promise
+    return new Promise((resolve, reject) => {
+      audio.addEventListener('ended', () => resolve());
+      audio.addEventListener('error', (e) => reject(e));
+      
+      audio.play().then(() => {
+        console.log('音频播放成功');
+      }).catch(reject);
+    });
     
   } catch (error) {
     console.error('播放音频失败:', error);
     console.error('失败的音频URL:', learningData[currentSet].audioUrl);
+    throw error;
   }
 };
 
@@ -209,26 +365,66 @@ const testAudioAccess = async () => {
   if (!hasValidData) {
     return (
       <div className="max-w-4xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-cyan-50 min-h-screen">
-        <div className="bg-white rounded-xl shadow-2xl p-8 text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">数据加载失败</h2>
-          <p className="text-gray-600 mb-4">
-            无法从{config.dataSource === 'network' ? '网络' : '本地'}加载学习数据
-          </p>
-          <div className="bg-gray-50 p-4 rounded-lg text-left">
-            <p className="text-sm text-gray-700 mb-2"><strong>当前配置：</strong></p>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>• 数据源：{config.dataSource === 'network' ? '网络' : '本地'}</li>
-              <li>• {config.dataSource === 'network' ? '网络地址' : '本地路径'}：{config.dataSource === 'network' ? config.networkUrl : config.localPath}</li>
-            </ul>
+        <div className="bg-white rounded-xl shadow-2xl p-8">
+          {/* 标题栏添加登录按钮 */}
+          <div className="flex items-center justify-between mb-6">
+            <div></div>
+            <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+              🧠 预测学习平台
+            </h1>
+            <button
+              onClick={handleLogin}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition"
+            >
+              <User size={20} className="mr-2" />
+              登录
+            </button>
           </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            重新加载
-          </button>
+
+          {/* 错误信息 */}
+          <div className="text-center">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">数据加载失败</h2>
+            <p className="text-gray-600 mb-4">
+              无法从{config.dataSource === 'network' ? '网络' : '本地'}加载学习数据
+            </p>
+            <div className="bg-gray-50 p-4 rounded-lg text-left">
+              <p className="text-sm text-gray-700 mb-2"><strong>当前配置：</strong></p>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• 数据源：{config.dataSource === 'network' ? '网络' : '本地'}</li>
+                <li>• {config.dataSource === 'network' ? '网络地址' : '本地路径'}：{config.dataSource === 'network' ? config.networkUrl : config.localPath}</li>
+              </ul>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              重新加载
+            </button>
+          </div>
         </div>
+
+        {/* 登录模态窗口 */}
+        <LoginModal 
+          isOpen={showLoginModal} 
+          onClose={handleCloseLoginModal}
+          onSwitchToRegister={handleSwitchToRegister}
+          onSwitchToForgotPassword={handleSwitchToForgotPassword}
+        />
+
+        {/* 注册模态窗口 */}
+        <RegisterModal 
+          isOpen={showRegisterModal} 
+          onClose={handleCloseRegisterModal}
+          onSwitchToLogin={handleSwitchToLogin}
+        />
+
+        {/* 找回密码模态窗口 */}
+        <ForgotPasswordModal 
+          isOpen={showForgotPasswordModal} 
+          onClose={handleCloseForgotPasswordModal}
+          onSwitchToLogin={handleSwitchFromForgotPasswordToLogin}
+        />
       </div>
     );
   }
@@ -238,11 +434,19 @@ const testAudioAccess = async () => {
     return (
       <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-cyan-50 min-h-screen">
         <div className="bg-white rounded-xl shadow-2xl p-8">
-          <div className="flex items-center justify-center mb-8">
+          <div className="flex items-center justify-between mb-8">
+            <div></div>
             <h1 className="text-4xl font-bold text-gray-800 flex items-center">
               {/* <BookOpen className="mr-3 text-blue-600" size={40} /> */}
               🧠 预测学习平台
             </h1>
+            <button
+              onClick={handleLogin}
+              className="flex items-center px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition"
+            >
+              <User size={24} className="mr-2" />
+              登录
+            </button>
           </div>
           
           <LearningSetSelector
@@ -250,6 +454,26 @@ const testAudioAccess = async () => {
             onSelect={handleLearningSetSelect}
           />
         </div>
+
+        {/* 登录模态窗口 */}
+        <LoginModal 
+          isOpen={showLoginModal} 
+          onClose={handleCloseLoginModal}
+          onSwitchToRegister={handleSwitchToRegister}
+          onSwitchToForgotPassword={handleSwitchToForgotPassword}
+        />
+
+        <RegisterModal 
+          isOpen={showRegisterModal} 
+          onClose={handleCloseRegisterModal}
+          onSwitchToLogin={handleSwitchToLogin}
+        />
+
+        <ForgotPasswordModal 
+          isOpen={showForgotPasswordModal} 
+          onClose={handleCloseForgotPasswordModal}
+          onSwitchToLogin={handleSwitchFromForgotPasswordToLogin}
+        />
       </div>
     );
   }
@@ -368,6 +592,13 @@ const testAudioAccess = async () => {
             <BookOpen className="mr-3 text-blue-600" size={28} />
             {learningData[currentSet].description}
           </h1>
+          <button
+            onClick={handleLogin}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition"
+          >
+            <User size={20} className="mr-2" />
+            登录
+          </button>
         </div>
 
         {/* 学习模式选择 */}
@@ -394,22 +625,32 @@ const testAudioAccess = async () => {
 
         {/* 完整句子显示 */}
         {learningData[currentSet] && learningData[currentSet].fullText && (
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 rounded-lg mb-8 text-white">
-            <div className="text-sm opacity-80 mb-2">完整句子</div>
-            <div className="flex items-center justify-between">
-              <div className="text-lg font-medium flex-1">{learningData[currentSet].fullText}</div>
-              {learningData[currentSet].audioUrl && (
-                <button
-                  onClick={playAudio}
-                  className="ml-4 p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-all duration-200 flex items-center justify-center"
-                  title="播放音频"
-                >
-                  <Play size={20} className="text-white" />
-                </button>
-              )}
-            </div>
-          </div>
+          <FullSentenceDisplay
+            fullText={learningData[currentSet].fullText}
+            audioUrl={learningData[currentSet].audioUrl}
+            onPlayRecord={(sentence, playTime, playCountIncrement = 1) => {
+              sentenceTrackingManager.recordPlay(sentence, playTime, playCountIncrement);
+            }}
+          />
         )}
+
+        {/* 统计和分享按钮 */}
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            onClick={handleShowShare}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          >
+            <Share size={16} className="mr-2" />
+            分享
+          </button>
+          <button
+            onClick={handleShowStatistics}
+            className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+          >
+            <BarChart3 size={16} className="mr-2" />
+            查看听读统计
+          </button>
+        </div>
 
         {/* 词汇学习模式 */}
         {learningMode === 'vocabulary' && vocabularyLearningData.length > 0 && (
@@ -491,6 +732,75 @@ const testAudioAccess = async () => {
           </ul>
         </div>
       </div>
+
+      {/* 登录模态窗口 */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={handleCloseLoginModal}
+        onSwitchToRegister={handleSwitchToRegister}
+        onSwitchToForgotPassword={handleSwitchToForgotPassword}
+      />
+
+      {/* 注册模态窗口 */}
+      <RegisterModal 
+        isOpen={showRegisterModal} 
+        onClose={handleCloseRegisterModal}
+        onSwitchToLogin={handleSwitchToLogin}
+      />
+
+      {/* 找回密码模态窗口 */}
+      <ForgotPasswordModal 
+        isOpen={showForgotPasswordModal} 
+        onClose={handleCloseForgotPasswordModal}
+        onSwitchToLogin={handleSwitchFromForgotPasswordToLogin}
+      />
+
+      {/* 句子统计模态窗口 */}
+      <SentenceStatistics
+        isOpen={showStatisticsModal}
+        onClose={handleCloseStatisticsModal}
+      />
+
+      {/* 分享模态窗口 */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-800">分享学习内容</h3>
+              <button
+                onClick={handleCloseShareModal}
+                className="text-gray-400 hover:text-gray-600 text-xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                复制以下链接分享给他人，对方点击后将直接跳转到当前学习内容：
+              </p>
+              <div className="bg-gray-100 p-3 rounded-lg break-all text-sm">
+                {generateShareLink()}
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={copyShareLink}
+                className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                复制链接
+              </button>
+              <button
+                onClick={handleCloseShareModal}
+                className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
